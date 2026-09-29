@@ -1,0 +1,18 @@
+.campaign-block {
+  background: var(--camp-bg);
+  color: var(--camp-ink);
+}
+
+.card.campaign-block {
+  background: var(--camp-bg);
+  color: var(--camp-ink);
+}
+
+.campaign-block .campaign-accent {
+  background: var(--camp-accent);
+  color: var(--camp-accent-ink);
+}
+
+.campaign-block .eyebrow {
+  color: var(--camp-ink);
+}

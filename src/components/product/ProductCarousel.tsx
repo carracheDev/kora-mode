@@ -1,0 +1,70 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { Product } from "@/core/types";
+import { ProductCard } from "@/components/product/ProductCard";
+
+export function ProductCarousel({ products }: { products: Product[] }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [canGoForward, setCanGoForward] = useState(false);
+
+  const updateControls = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    setCanGoBack(track.scrollLeft > 2);
+    setCanGoForward(track.scrollLeft + track.clientWidth < track.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    updateControls();
+    const observer = new ResizeObserver(updateControls);
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, [updateControls, products.length]);
+
+  function move(direction: -1 | 1) {
+    const track = trackRef.current;
+    if (!track) return;
+    track.scrollBy({ left: direction * track.clientWidth, behavior: "smooth" });
+  }
+
+  return (
+    <div className="relative">
+      <div
+        className="scrollbar-hidden -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:gap-4 sm:px-0"
+        onScroll={updateControls}
+        ref={trackRef}
+      >
+        {products.map((product) => (
+          <div className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[42vw] md:w-[calc((100%-48px)/4)] md:max-w-none" key={product.id}>
+            <ProductCard product={product} />
+          </div>
+        ))}
+      </div>
+      <div className="pointer-events-none absolute -top-[58px] right-0 hidden gap-2 md:flex">
+        <button
+          aria-label="Articles précédents"
+          className="pointer-events-auto grid size-11 place-items-center rounded-full border border-line bg-surface text-ink shadow-[var(--shadow-card)] transition-colors hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!canGoBack}
+          onClick={() => move(-1)}
+          type="button"
+        >
+          <ChevronLeft aria-hidden="true" size={20} />
+        </button>
+        <button
+          aria-label="Articles suivants"
+          className="pointer-events-auto grid size-11 place-items-center rounded-full border border-line bg-surface text-ink shadow-[var(--shadow-card)] transition-colors hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!canGoForward}
+          onClick={() => move(1)}
+          type="button"
+        >
+          <ChevronRight aria-hidden="true" size={20} />
+        </button>
+      </div>
+    </div>
+  );
+}

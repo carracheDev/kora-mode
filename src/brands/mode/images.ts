@@ -1,0 +1,48 @@
+export const images = {
+  hero: {
+    blackfriday: "/Images/hero/hero-blackfriday.jpg",
+    noel: "/Images/hero/hero-noel.jpg",
+    nouvelan: "/Images/hero/hero-nouvelan.jpg",
+  },
+  categories: {
+    femme: "/Images/Cat%C3%A9gories/femme.jpg",
+    homme: "/Images/Cat%C3%A9gories/homme.jpg",
+    accessoires: "/Images/Cat%C3%A9gories/accessoires.jpg",
+    promos: "/Images/Cat%C3%A9gories/promos.jpg",
+  },
+  products: {
+    placeholder: "/Images/Produits/placeholder.jpg",
+    nova: "/Images/Produits/blazer-oversize-nova-1.jpg",
+    urban: "/Images/Produits/bomber-urban-ivoire-1.jpg",
+    atlas: "/Images/Produits/pantalon-wide-leg-atlas-1.jpg",
+    lune: "/Images/Produits/crop-top-lune-1.jpg",
+    dakar: "/Images/Produits/jean-relaxed-dakar-1.jpg",
+    zero: "/Images/Produits/veste-utilitaire-zero-1.jpg",
+    ayo: "/Images/Produits/sac-structure-ayo-1.jpg",
+    sneakers: "/Images/Produits/sneakers-blanc-studio-1.jpg",
+  },
+  focus: {
+    flashOffer: "50% 8%",
+    hero: {
+      blackfriday: "50% 15%",
+      noel: "50% 15%",
+      nouvelan: "50% 15%",
+    },
+    categories: {
+      femme: "50% 12%",
+      homme: "50% 12%",
+      accessoires: "50% 50%",
+      promos: "50% 12%",
+    },
+    products: {
+      "nova-blazer": "50% 10%",
+      "urban-bomber": "50% 10%",
+      "atlas-wide-leg": "50% 10%",
+      "lune-crop-top": "50% 10%",
+      "dakar-relaxed-jean": "50% 10%",
+      "zero-utility-jacket": "50% 10%",
+      "ayo-structured-bag": "50% 50%",
+      "blanc-studio-sneakers": "50% 50%",
+    },
+  },
+} as const;
