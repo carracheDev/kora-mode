@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Smartphone, Wallet } from "lucide-react";
 import { products } from "@/brands/mode/products";
 import { useCampaign } from "@/providers/CampaignProvider";
 import { formatFCFA } from "@/core/lib/format";
+import { getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
 import { useCartStore } from "@/core/store/cart";
 import { useOrdersStore } from "@/core/store/orders";
 import type { Order } from "@/core/types";
@@ -60,10 +61,16 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
 
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), []);
   const validItems = items.filter((item) => productById.has(item.productId));
-  const subtotal = validItems.reduce((sum, item) => sum + (productById.get(item.productId)?.price ?? 0) * item.quantity, 0);
-  const eligibleSubtotal = validItems.reduce((sum, item) => campaign.productIds.includes(item.productId) ? sum + (productById.get(item.productId)?.price ?? 0) * item.quantity : sum, 0);
+  const stockIssues = [...new Set(validItems.map((item) => item.productId))].filter((productId) => {
+    const product = productById.get(productId)!;
+    const requested = validItems.reduce((sum, item) => item.productId === productId ? sum + item.quantity : sum, 0);
+    return product.stock <= 0 || requested > product.stock;
+  });
+  const getProduct = (productId: string) => productById.get(productId);
+  const subtotal = getCartSubtotal(validItems, getProduct);
+  const eligibleSubtotal = getEligibleSubtotal(validItems, campaign.productIds, getProduct);
   const validPromo = promoApplied && promoCode.trim().toUpperCase() === campaign.promoCode.code.toUpperCase() && eligibleSubtotal > 0;
-  const discount = validPromo ? Math.round(eligibleSubtotal * campaign.promoCode.percent / 100) : 0;
+  const discount = validPromo ? getPromoDiscount(subtotal, eligibleSubtotal, campaign.promoCode.percent) : 0;
   const delivery = deliveryOptions.find((option) => option.city === city) ?? deliveryOptions[0];
   const total = Math.max(0, subtotal - discount) + delivery.fee;
 
@@ -84,6 +91,10 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
   function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!validItems.length) return;
+    if (stockIssues.length) {
+      setFormError("Une quantité demandée dépasse le stock disponible. Ajustez votre panier avant de continuer.");
+      return;
+    }
     if (!name.trim() || !phone.trim() || !address.trim()) {
       setFormError("Renseignez votre nom, votre téléphone et votre adresse complète.");
       return;
@@ -161,7 +172,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
           <aside aria-label="Récapitulatif de commande" className="lg:sticky lg:top-24">
             <Card className="grid gap-4">
               <h2 className="font-heading text-xl font-bold">Votre commande</h2>
-              <ul className="grid gap-3 border-b border-line pb-4">{validItems.map((item, index) => { const product = productById.get(item.productId)!; return <li className="flex justify-between gap-4 text-sm" key={`${item.productId}-${item.size}-${item.color}-${index}`}><span className="text-muted">{product.name} × {item.quantity}{item.size ? ` · ${item.size}` : ""}{item.color ? ` · ${item.color}` : ""}</span><span className="shrink-0 font-semibold">{formatFCFA(product.price * item.quantity)}</span></li>; })}</ul>
+              <ul className="grid gap-3 border-b border-line pb-4">{validItems.map((item, index) => { const product = productById.get(item.productId)!; return <li className="flex justify-between gap-4 text-sm" key={`${item.productId}-${item.size}-${item.color}-${index}`}><span className="text-muted">{product.name} × {item.quantity}{item.size ? ` · ${item.size}` : ""}{item.color ? ` · ${item.color}` : ""}</span><span className="shrink-0 font-semibold">{formatFCFA(getCartItemTotal(item, product))}</span></li>; })}</ul>
               {campaign.productIds.some((id) => validItems.some((item) => item.productId === id)) ? <div className="grid gap-2"><label className="text-sm font-semibold" htmlFor="checkout-promo">Code promo</label><div className="flex gap-2"><input autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-[var(--radius-button)] border border-line bg-surface px-3 text-sm uppercase text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" id="checkout-promo" onChange={(event) => { setPromoCode(event.target.value); setPromoApplied(false); setPromoMessage(""); }} value={promoCode} /><Button className="!px-3 !text-sm" onClick={applyPromo} type="button" variant="secondary">Appliquer</Button></div><p aria-live="polite" className={`text-xs ${promoMessage ? (validPromo ? "text-success" : "text-error") : "text-muted"}`}>{promoMessage || (validPromo ? `${campaign.promoCode.code} appliqué à la sélection éligible.` : `Code campagne : ${campaign.promoCode.code} (−${campaign.promoCode.percent}%).`)}</p></div> : null}
               <div className="grid gap-3 border-t border-line pt-3 text-sm">
                 <div className="flex justify-between gap-3"><span className="text-muted">Sous-total</span><span>{formatFCFA(subtotal)}</span></div>
@@ -170,7 +181,8 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
                 <div className="flex justify-between gap-3 border-t border-line pt-3 text-base"><span className="font-bold">Total à régler</span><span className="font-bold">{formatFCFA(total)}</span></div>
               </div>
               {formError ? <p className="text-sm text-error" role="alert">{formError}</p> : null}
-              <Button className="w-full !text-sm" type="submit">Enregistrer ma commande de démo</Button>
+              {stockIssues.length > 0 ? <p className="text-sm text-error">Le stock a changé pour un ou plusieurs articles. Ajustez votre panier avant de commander.</p> : null}
+              <Button className="w-full !text-sm" disabled={stockIssues.length > 0} type="submit">Enregistrer ma commande de démo</Button>
               <p className="text-xs leading-5 text-muted">Commande locale de démonstration. Les tarifs de livraison et le paiement sont simulés.</p>
             </Card>
           </aside>

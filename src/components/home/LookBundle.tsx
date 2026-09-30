@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { products } from "@/brands/mode/products";
 import { images } from "@/brands/mode/images";
 import { formatFCFA } from "@/core/lib/format";
+import { getCartItemTotal } from "@/core/lib/pricing";
 import { useCartStore } from "@/core/store/cart";
 import { useToast } from "@/components/ui/ToastProvider";
 import { Button } from "@/components/ui/Button";
@@ -17,14 +18,20 @@ const lookProductSlugs = ["blazer-oversize-nova", "pantalon-wide-leg-atlas", "sn
 export function LookBundle() {
   const [adding, setAdding] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
+  const cartItems = useCartStore((state) => state.items);
   const { showToast } = useToast();
   const look = lookProductSlugs
     .map((slug) => products.find((product) => product.slug === slug))
     .filter((product) => product !== undefined);
   const total = look.reduce((sum, product) => sum + product.price, 0);
-  const bundlePrice = Math.round(total * 0.9);
+  const bundlePrice = look.reduce((sum, product) => sum + getCartItemTotal({ productId: product.id, quantity: 1, discountPercent: 10 }, product), 0);
 
   function addLook() {
+    const unavailable = look.some((product) => cartItems.reduce((sum, item) => item.productId === product.id ? sum + item.quantity : sum, 0) >= product.stock);
+    if (unavailable) {
+      showToast("Une pièce du look a atteint son stock disponible dans votre panier.");
+      return;
+    }
     setAdding(true);
     look.forEach((product) => {
       const size = product.sizes.includes("M") ? "M" : product.sizes[0] ?? "Unique";

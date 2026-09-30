@@ -7,6 +7,7 @@ import { useCampaign } from "@/providers/CampaignProvider";
 import { products } from "@/brands/mode/products";
 import { images } from "@/brands/mode/images";
 import { formatFCFA } from "@/core/lib/format";
+import { getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
 import { useCartStore } from "@/core/store/cart";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -36,12 +37,10 @@ export function CartPageClient() {
   const { campaign } = useCampaign();
 
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), []);
-  const subtotal = items.reduce((total, item) => total + (productById.get(item.productId)?.price ?? 0) * item.quantity, 0);
-  const eligibleSubtotal = items.reduce((total, item) => {
-    if (!campaign.productIds.includes(item.productId)) return total;
-    return total + (productById.get(item.productId)?.price ?? 0) * item.quantity;
-  }, 0);
-  const promoDiscount = promoState?.valid ? Math.round(eligibleSubtotal * campaign.promoCode.percent / 100) : 0;
+  const getProduct = (productId: string) => productById.get(productId);
+  const subtotal = getCartSubtotal(items, getProduct);
+  const eligibleSubtotal = getEligibleSubtotal(items, campaign.productIds, getProduct);
+  const promoDiscount = promoState?.valid ? getPromoDiscount(subtotal, eligibleSubtotal, campaign.promoCode.percent) : 0;
   const total = Math.max(0, subtotal - promoDiscount);
   const checkoutHref = `/checkout${promoState?.valid ? `?code=${encodeURIComponent(campaign.promoCode.code)}` : ""}`;
 
@@ -86,9 +85,10 @@ export function CartPageClient() {
               {items.map((item, index) => {
                 const product = productById.get(item.productId);
                 if (!product) {
-                  return <Card className="flex items-center justify-between gap-4" key={`${item.productId}-${item.size}-${item.color}-${index}`}><p className="text-sm text-muted">Cet article n’est plus disponible dans le catalogue.</p><button aria-label="Supprimer cet article" className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-soft hover:text-error" onClick={() => removeItem(item.productId, item.size, item.color)} type="button"><Trash2 aria-hidden="true" size={18} /></button></Card>;
+                  return <Card className="flex items-center justify-between gap-4" key={`${item.productId}-${item.size}-${item.color}-${index}`}><p className="text-sm text-muted">Cet article n’est plus disponible dans le catalogue.</p><button aria-label="Supprimer cet article" className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-soft hover:text-error" onClick={() => removeItem(item.productId, item.size, item.color, item.bundleId)} type="button"><Trash2 aria-hidden="true" size={18} /></button></Card>;
                 }
-                const lineTotal = product.price * item.quantity;
+                const lineTotal = getCartItemTotal(item, product);
+                const productQuantity = items.reduce((sum, cartItem) => cartItem.productId === item.productId ? sum + cartItem.quantity : sum, 0);
                 return (
                   <Card className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 !p-3 sm:grid-cols-[112px_minmax(0,1fr)] sm:gap-4 sm:!p-4" key={`${item.productId}-${item.size}-${item.color}-${index}`}>
                     <Link aria-label={`Voir ${product.name}`} className="relative block aspect-[4/5] overflow-hidden rounded-[calc(var(--radius-card)-6px)] bg-surface-soft" href={`/produit/${product.slug}`}>
@@ -105,9 +105,9 @@ export function CartPageClient() {
                       </div>
                       <div className="flex flex-wrap items-end justify-between gap-3">
                         <div aria-label="Quantité" className="inline-flex min-h-10 items-center rounded-[var(--radius-button)] border border-line">
-                          <button aria-label={`Diminuer la quantité de ${product.name}`} className="grid size-10 place-items-center text-ink disabled:text-muted" disabled={item.quantity <= 1} onClick={() => setQuantity(item.productId, item.quantity - 1, item.size, item.color)} type="button"><Minus aria-hidden="true" size={15} /></button>
+                          <button aria-label={`Diminuer la quantité de ${product.name}`} className="grid size-10 place-items-center text-ink disabled:text-muted" disabled={item.quantity <= 1} onClick={() => setQuantity(item.productId, item.quantity - 1, item.size, item.color, item.bundleId)} type="button"><Minus aria-hidden="true" size={15} /></button>
                           <span aria-live="polite" className="min-w-8 text-center text-sm font-semibold">{item.quantity}</span>
-                          <button aria-label={`Augmenter la quantité de ${product.name}`} className="grid size-10 place-items-center text-ink disabled:text-muted" disabled={item.quantity >= product.stock} onClick={() => setQuantity(item.productId, item.quantity + 1, item.size, item.color)} type="button"><Plus aria-hidden="true" size={15} /></button>
+                          <button aria-label={`Augmenter la quantité de ${product.name}`} className="grid size-10 place-items-center text-ink disabled:text-muted" disabled={productQuantity >= product.stock} onClick={() => setQuantity(item.productId, item.quantity + 1, item.size, item.color, item.bundleId)} type="button"><Plus aria-hidden="true" size={15} /></button>
                         </div>
                         <p className="text-sm font-bold text-ink">{formatFCFA(lineTotal)}</p>
                       </div>

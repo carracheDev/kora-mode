@@ -6,6 +6,8 @@ import { getProductBySlug } from "@/brands/mode/products";
 import { Container } from "@/components/ui/Container";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
+import { RelatedProducts } from "@/components/product/RelatedProducts";
+import { ComplementaryProducts } from "@/components/product/ComplementaryProducts";
 
 type ProductPageProps = PageProps<"/produit/[slug]">;
 
@@ -29,8 +31,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </Link>
         <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
           <ProductGallery product={product} />
-          <ProductPurchasePanel product={product} />
+          <div>
+            <ProductPurchasePanel product={product} />
+            <ComplementaryProducts product={product} />
+          </div>
         </div>
+        <RelatedProducts product={product} />
       </Container>
     </main>
   );

@@ -75,7 +75,7 @@ const paymentMethodLabels: Record<string, string> = {
 };
 
 function OrderSummaryCard({ order }: { order: Order }) {
-  const createdAt = new Intl.DateTimeFormat("fr-BJ", { dateStyle: "medium", timeStyle: "short" }).format(new Date(order.createdAt));
+  const createdAt = new Intl.DateTimeFormat("fr-BJ", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Porto-Novo" }).format(new Date(order.createdAt));
   const paymentStatus = order.paymentStatus ?? "pending";
   return (
     <Card className="grid gap-4 !p-4 sm:!p-5">

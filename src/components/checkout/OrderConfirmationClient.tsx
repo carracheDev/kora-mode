@@ -6,6 +6,7 @@ import { CheckCircle2, Clock3, PackageCheck, XCircle } from "lucide-react";
 import { products } from "@/brands/mode/products";
 import { modeBrand } from "@/brands/mode/brand";
 import { formatFCFA } from "@/core/lib/format";
+import { getCartItemTotal } from "@/core/lib/pricing";
 import { buildWhatsAppUrl } from "@/core/lib/whatsapp";
 import { useOrdersStore } from "@/core/store/orders";
 import { Button } from "@/components/ui/Button";
@@ -92,7 +93,7 @@ export function OrderConfirmationClient({ orderId }: { orderId: string }) {
 
           <div className="grid gap-3 rounded-[var(--radius-card)] bg-surface-soft p-4 text-sm sm:grid-cols-2"><p><span className="text-muted">Référence :</span> <strong>{order.id}</strong></p><p><span className="text-muted">Mode choisi :</span> <strong>{paymentLabels[order.paymentMethod ?? "cod"]}</strong></p><p><span className="text-muted">Client :</span> <strong>{order.customerName}</strong></p><p><span className="text-muted">Téléphone :</span> <strong>{order.customerPhone}</strong></p><p className="sm:col-span-2"><span className="text-muted">Livraison :</span> <strong>{order.customerAddress}, {order.customerCity}</strong></p></div>
 
-          <section aria-label="Articles commandés" className="grid gap-3"><h2 className="font-heading text-xl font-bold">Articles</h2>{order.items.map((item, index) => { const product = productById.get(item.productId); return <div className="flex justify-between gap-4 border-b border-line pb-3 text-sm" key={`${item.productId}-${item.size}-${item.color}-${index}`}><p>{product?.name ?? "Article"} × {item.quantity}{item.size ? ` · ${item.size}` : ""}{item.color ? ` · ${item.color}` : ""}</p><span className="shrink-0 font-semibold">{formatFCFA((product?.price ?? 0) * item.quantity)}</span></div>; })}</section>
+          <section aria-label="Articles commandés" className="grid gap-3"><h2 className="font-heading text-xl font-bold">Articles</h2>{order.items.map((item, index) => { const product = productById.get(item.productId); return <div className="flex justify-between gap-4 border-b border-line pb-3 text-sm" key={`${item.productId}-${item.size}-${item.color}-${index}`}><p>{product?.name ?? "Article"} × {item.quantity}{item.size ? ` · ${item.size}` : ""}{item.color ? ` · ${item.color}` : ""}</p><span className="shrink-0 font-semibold">{formatFCFA(getCartItemTotal(item, product))}</span></div>; })}</section>
 
           <section aria-label="Montants" className="grid gap-2 text-sm"><p className="flex justify-between"><span className="text-muted">Sous-total</span><span>{formatFCFA(order.subtotal)}</span></p>{order.promoDiscount ? <p className="flex justify-between text-success"><span>Code {order.promoCode}</span><span>−{formatFCFA(order.promoDiscount)}</span></p> : null}<p className="flex justify-between"><span className="text-muted">Livraison</span><span>{formatFCFA(order.deliveryFee)}</span></p><p className="flex justify-between border-t border-line pt-3 text-base font-bold"><span>Total</span><span>{formatFCFA(order.total)}</span></p></section>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Heart, Minus, Plus, Share2 } from "lucide-react";
 import type { Product } from "@/core/types";
 import { modeBrand } from "@/brands/mode/brand";
@@ -17,9 +17,15 @@ import { ProductServiceInfo } from "@/components/product/ProductServiceInfo";
 export function ProductPurchasePanel({ product }: { product: Product }) {
   const { size, color, setSize, setColor } = useProductVariantSelection();
   const [quantity, setQuantity] = useState(1);
+  const [mainCtaVisible, setMainCtaVisible] = useState(true);
+  const [purchasePanelVisible, setPurchasePanelVisible] = useState(true);
+  const purchasePanelRef = useRef<HTMLElement>(null);
+  const mainCtaRef = useRef<HTMLDivElement>(null);
+  const variantSelectorRef = useRef<HTMLDivElement>(null);
   const favorite = useFavoritesStore((state) => state.productIds.includes(product.id));
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
   const addItem = useCartStore((state) => state.addItem);
+  const quantityInCart = useCartStore((state) => state.items.reduce((sum, item) => item.productId === product.id ? sum + item.quantity : sum, 0));
   const { showToast } = useToast();
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
@@ -38,9 +44,36 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
     `Prix : ${formatFCFA(total)}`,
   ].join("\n");
   const whatsappUrl = buildWhatsAppUrl(modeBrand.whatsappNumber, whatsappMessage);
+  const showStickyCta = available && !mainCtaVisible && purchasePanelVisible;
+
+  useEffect(() => {
+    const panel = purchasePanelRef.current;
+    const cta = mainCtaRef.current;
+    if (!panel || !cta || typeof IntersectionObserver === "undefined") return;
+    const panelObserver = new IntersectionObserver(([entry]) => setPurchasePanelVisible(entry.isIntersecting), { threshold: 0 });
+    const ctaObserver = new IntersectionObserver(([entry]) => setMainCtaVisible(entry.isIntersecting), { threshold: 0.1 });
+    panelObserver.observe(panel);
+    ctaObserver.observe(cta);
+    return () => {
+      panelObserver.disconnect();
+      ctaObserver.disconnect();
+    };
+  }, []);
+
+  function handleStickyCta() {
+    if (!hasVariants) {
+      variantSelectorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    addToCart();
+  }
 
   function addToCart() {
     if (!hasVariants || !available) return;
+    if (quantityInCart + quantity > product.stock) {
+      showToast(`Stock disponible : ${Math.max(0, product.stock - quantityInCart)} article(s).`);
+      return;
+    }
     addItem({ productId: product.id, quantity, size, color });
     showToast(`${product.name} ajouté au panier.`);
   }
@@ -79,7 +112,7 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
           : "";
 
   return (
-    <section className="grid content-start gap-5" aria-label="Acheter ce produit">
+    <section ref={purchasePanelRef} className="grid content-start gap-5" aria-label="Acheter ce produit">
       <div>
         <p className="eyebrow">{product.category}</p>
         <h1 className="mt-2 font-heading font-extrabold">{product.name}</h1>
@@ -97,13 +130,15 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
 
       <ProductServiceInfo />
 
-      <ProductVariantSelector
-        color={color}
-        onColorChange={setColor}
-        onSizeChange={setSize}
-        product={product}
-        size={size}
-      />
+      <div id="product-variants" ref={variantSelectorRef}>
+        <ProductVariantSelector
+          color={color}
+          onColorChange={setColor}
+          onSizeChange={setSize}
+          product={product}
+          size={size}
+        />
+      </div>
 
       <div>
         <span className="text-sm font-semibold text-ink">Quantité</span>
@@ -115,9 +150,11 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
       </div>
 
       <p aria-live="polite" className="min-h-5 text-sm text-muted">{selectionMessage}</p>
-      <Button className="w-full" disabled={!hasVariants || !available} onClick={addToCart}>
-        Ajouter au panier
-      </Button>
+      <div ref={mainCtaRef}>
+        <Button className="w-full" disabled={!hasVariants || !available} onClick={addToCart}>
+          Ajouter au panier
+        </Button>
+      </div>
       <Button className="w-full" disabled={!hasVariants || !available} onClick={() => window.open(whatsappUrl, "_blank", "noopener,noreferrer")} variant="secondary">
         Commander via WhatsApp
       </Button>
@@ -131,6 +168,16 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
         </Button>
       </div>
       <p aria-live="polite" className="text-sm font-semibold text-ink">Total : {formatFCFA(total)}</p>
+      {showStickyCta ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[var(--shadow-popover)] backdrop-blur md:hidden">
+          <div className="mx-auto flex max-w-7xl items-center gap-3 px-1">
+            <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink">{formatFCFA(total)}</span>
+            <Button className="min-h-12 flex-1 !text-sm" disabled={!available} onClick={handleStickyCta}>
+              {hasVariants ? "Ajouter au panier" : "Choisir mes variantes"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

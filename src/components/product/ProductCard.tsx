@@ -24,6 +24,7 @@ export function ProductCard({ product }: { product: Product }) {
   const favorite = useFavoritesStore((state) => state.productIds.includes(product.id));
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
   const addItem = useCartStore((state) => state.addItem);
+  const quantityInCart = useCartStore((state) => state.items.reduce((sum, item) => item.productId === product.id ? sum + item.quantity : sum, 0));
   const { showToast } = useToast();
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
@@ -46,6 +47,10 @@ export function ProductCard({ product }: { product: Product }) {
   }, [sheetOpen]);
 
   function addToCart() {
+    if (quantityInCart >= product.stock) {
+      showToast("Le stock disponible pour cet article est déjà dans votre panier.");
+      return;
+    }
     addItem({ productId: product.id, quantity: 1, size, color: color || undefined });
     setSheetOpen(false);
     showToast(`${product.name} ajouté au panier.`);
@@ -105,8 +110,8 @@ export function ProductCard({ product }: { product: Product }) {
             {product.stock < 5 ? `Plus que ${product.stock} en stock` : ""}
           </p>
 
-          <Button className="relative z-[2] mt-auto w-full !text-sm" onClick={() => setSheetOpen(true)} size="sm" variant="primary">
-            Ajouter
+          <Button className="relative z-[2] mt-auto w-full !text-sm" disabled={product.stock <= 0 || quantityInCart >= product.stock} onClick={() => setSheetOpen(true)} size="sm" variant="primary">
+            {product.stock <= 0 ? "Rupture de stock" : quantityInCart >= product.stock ? "Stock dans le panier" : "Ajouter"}
           </Button>
         </article>
       </Card>
