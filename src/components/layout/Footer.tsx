@@ -17,10 +17,10 @@ const storefrontLinks: Record<string, string> = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-footer-divider bg-ink pt-10 pb-[calc(env(safe-area-inset-bottom)+5rem)] text-footer-text sm:pt-16 sm:pb-[calc(env(safe-area-inset-bottom)+6rem)]">
+    <footer className="border-t border-footer-divider bg-ink pt-8 pb-[calc(env(safe-area-inset-bottom)+3rem)] text-footer-text sm:pt-16 sm:pb-[calc(env(safe-area-inset-bottom)+6rem)]">
       <Container>
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1.5fr]">
-          <div>
+        <div className="grid grid-cols-2 items-start gap-x-6 gap-y-8 sm:gap-10 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1.5fr]">
+          <div className="col-span-2 sm:col-span-1">
             <Link className="font-heading text-2xl font-extrabold tracking-[-0.04em] text-surface" href="/">
               KORA <span className="font-sans text-xs tracking-normal">MODE</span>
             </Link>
@@ -53,7 +53,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <h3 className="font-bold text-surface">{modeBrand.footer.newsletter.title}</h3>
             <p className="mt-2 text-sm leading-6 text-footer-text">{modeBrand.footer.newsletter.description}</p>
             <NewsletterSignup />

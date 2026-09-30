@@ -72,7 +72,7 @@ export function CartPageClient() {
   }
 
   return (
-    <main className="py-8 sm:py-12">
+    <main className="min-w-0 py-8 sm:py-12">
       <Container>
         <Link className="mb-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary" href="/boutique"><ArrowLeft aria-hidden="true" size={17} />Continuer mes achats</Link>
         <div className="mb-7">
@@ -88,8 +88,8 @@ export function CartPageClient() {
             <Link className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-button)] bg-primary px-5 text-sm font-bold text-primary-ink hover:bg-primary-hover" href="/boutique">Découvrir la boutique</Link>
           </Card>
         ) : (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
-            <section aria-label="Articles du panier" className="grid gap-3">
+          <div className="grid w-full min-w-0 max-w-full grid-cols-1 items-start gap-5 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
+            <section aria-label="Articles du panier" className="grid w-full min-w-0 gap-3">
               {items.map((item, index) => {
                 const product = productById.get(item.productId);
                 if (!product) {
@@ -99,12 +99,12 @@ export function CartPageClient() {
                 const lineDiscount = getCartItemDiscount(item, product);
                 const productQuantity = items.reduce((sum, cartItem) => cartItem.productId === item.productId ? sum + cartItem.quantity : sum, 0);
                 return (
-                  <Card className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 !p-3 sm:grid-cols-[112px_minmax(0,1fr)] sm:gap-4 sm:!p-4" key={`${item.productId}-${item.size}-${item.color}-${index}`}>
+                  <Card className="grid w-full min-w-0 max-w-full grid-cols-[72px_minmax(0,1fr)] gap-3 !p-3 sm:grid-cols-[112px_minmax(0,1fr)] sm:gap-4 sm:!p-4" key={`${item.productId}-${item.size}-${item.color}-${index}`}>
                     <Link aria-label={`Voir ${product.name}`} className="relative block aspect-[4/5] overflow-hidden rounded-[calc(var(--radius-card)-6px)] bg-surface-soft" href={`/produit/${product.slug}`}>
                       <SmartImage alt={product.name} sizes="112px" src={product.images[0] ?? images.products.placeholder} />
                     </Link>
                     <div className="flex min-w-0 flex-col justify-between gap-3 py-0.5">
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-xs text-muted">{product.category}</p>
                           <Link className="mt-1 line-clamp-2 font-semibold text-ink hover:text-primary" href={`/produit/${product.slug}`}>{product.name}</Link>
@@ -118,7 +118,7 @@ export function CartPageClient() {
                           <span aria-live="polite" className="min-w-8 text-center text-sm font-semibold">{item.quantity}</span>
                           <button aria-label={`Augmenter la quantité de ${product.name}`} className="grid size-10 place-items-center text-ink disabled:text-muted" disabled={productQuantity >= product.stock} onClick={() => setQuantity(item.productId, item.quantity + 1, item.size, item.color, item.bundleId)} type="button"><Plus aria-hidden="true" size={15} /></button>
                         </div>
-                        <div className="text-right">
+                        <div className="min-w-0 text-right">
                           {lineDiscount > 0 ? <del className="block text-xs text-muted">{formatFCFA(getCartItemBaseTotal(item, product))}</del> : null}
                           <p className="text-sm font-bold text-ink">{formatFCFA(lineTotal)}</p>
                           {lineDiscount > 0 ? <p className="text-xs text-success">Look complet −{item.discountPercent}%</p> : null}
@@ -130,24 +130,24 @@ export function CartPageClient() {
               })}
             </section>
 
-            <aside aria-label="Récapitulatif du panier" className="lg:sticky lg:top-24">
-              <Card className="grid gap-4">
+            <aside aria-label="Récapitulatif du panier" className="w-full min-w-0 max-w-full lg:sticky lg:top-24">
+              <Card className="grid w-full min-w-0 max-w-full gap-4 !p-4 sm:!p-5">
                 <h2 className="font-heading text-xl font-bold">Récapitulatif</h2>
-                <form className="grid gap-2" onSubmit={(event) => { event.preventDefault(); applyPromo(); }}>
+                <form className="grid min-w-0 gap-2" onSubmit={(event) => { event.preventDefault(); applyPromo(); }}>
                   <label className="text-sm font-semibold" htmlFor="cart-promo">Code promo</label>
-                  <div className="flex gap-2">
+                  <div className="flex min-w-0 gap-2">
                     <input autoCapitalize="characters" autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-[var(--radius-button)] border border-line bg-surface px-3 text-sm uppercase text-ink placeholder:normal-case focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" id="cart-promo" onChange={(event) => { setPromoInput(event.target.value); setPromoState(null); }} placeholder="Ex. BF40" value={promoInput} />
-                    <Button className="!px-3 !text-sm" type="submit" variant="secondary">Appliquer</Button>
+                    <Button className="shrink-0 !px-3 !text-xs sm:!text-sm" type="submit" variant="secondary">Appliquer</Button>
                   </div>
                   <p aria-live="polite" className={`min-h-5 text-xs ${promoIsValid ? "text-success" : promoState || !offerActive ? "text-error" : "text-muted"}`}>{promoMessage}</p>
                 </form>
-                <div className="grid gap-3 border-t border-line pt-4 text-sm">
-                  <div className="flex justify-between gap-3"><span className="text-muted">Sous-total</span><span className="font-semibold">{formatFCFA(subtotal)}</span></div>
-                  {promoDiscount > 0 ? <div className="flex justify-between gap-3 text-success"><span>Remise {campaign.promoCode.code}</span><span>−{formatFCFA(promoDiscount)}</span></div> : null}
-                  <div className="flex justify-between gap-3"><span className="text-muted">Livraison</span><span className="text-right text-xs text-muted">Confirmée selon la zone</span></div>
-                  <div className="flex justify-between gap-3 border-t border-line pt-3 text-base"><span className="font-bold">Total articles</span><span className="font-bold">{formatFCFA(total)}</span></div>
+                <div className="grid min-w-0 gap-3 border-t border-line pt-4 text-sm">
+                  <div className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1"><span className="text-muted">Sous-total</span><span className="min-w-0 break-words text-right font-semibold">{formatFCFA(subtotal)}</span></div>
+                  {promoDiscount > 0 ? <div className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1 text-success"><span>Remise {campaign.promoCode.code}</span><span className="min-w-0 break-words text-right">−{formatFCFA(promoDiscount)}</span></div> : null}
+                  <div className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1"><span className="text-muted">Livraison</span><span className="min-w-0 text-right text-xs text-muted">Confirmée selon la zone</span></div>
+                  <div className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1 border-t border-line pt-3 text-base"><span className="font-bold">Total articles</span><span className="min-w-0 break-words text-right font-bold">{formatFCFA(total)}</span></div>
                 </div>
-                <Link className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-button)] bg-primary px-5 text-center text-sm font-bold text-primary-ink hover:bg-primary-hover" href={checkoutHref}>Passer à la commande</Link>
+                <Link className="inline-flex min-h-12 w-full min-w-0 items-center justify-center whitespace-normal rounded-[var(--radius-button)] bg-primary px-3 text-center text-sm font-bold text-primary-ink hover:bg-primary-hover sm:px-5" href={checkoutHref}>Passer à la commande</Link>
                 <p className="text-xs leading-5 text-muted">Le total final inclura les frais de livraison affichés au checkout.</p>
               </Card>
             </aside>
