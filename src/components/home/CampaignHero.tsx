@@ -13,7 +13,7 @@ export function CampaignHero() {
   const endsAt = campaign.hero.endsAt ?? campaign.flashOffer.endsAt;
 
   return (
-    <section aria-labelledby="campaign-hero-title" className="campaign-block overflow-hidden">
+    <section aria-labelledby="campaign-hero-title" className="campaign-block overflow-hidden" id="campagne">
       <div className="mx-auto grid max-w-7xl items-center gap-0 px-4 pt-3 pb-1 sm:px-6 md:grid-cols-[0.9fr_1.1fr] md:gap-10 md:px-8 md:py-10 lg:gap-16 lg:py-14">
         <motion.div
           animate={{ opacity: 1, y: 0 }}
@@ -31,10 +31,10 @@ export function CampaignHero() {
           <CampaignCountdown className="mt-2 sm:mt-6" endsAt={endsAt} variant="campaign" />
           <div className="mt-1 flex flex-wrap items-center gap-3 sm:mt-7 sm:gap-4">
             <Link className="campaign-accent inline-flex min-h-12 items-center gap-2 rounded-[var(--radius-button)] px-5 text-sm font-bold" href={campaign.hero.ctaHref}>
-              Voir les offres <ArrowRight aria-hidden="true" size={17} />
+              {campaign.hero.ctaLabel} <ArrowRight aria-hidden="true" size={17} />
             </Link>
-            <Link className="inline-flex min-h-12 items-center text-sm font-semibold text-campaign-ink underline underline-offset-4" href="#nouveautes">
-              Découvrir la collection
+            <Link className="inline-flex min-h-12 items-center text-sm font-semibold text-campaign-ink underline underline-offset-4" href={campaign.hero.secondaryHref}>
+              {campaign.hero.secondaryLabel}
             </Link>
           </div>
         </motion.div>

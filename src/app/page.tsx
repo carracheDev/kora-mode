@@ -15,11 +15,11 @@ export default function Home() {
   return (
     <main>
       <CampaignHero />
-      <TrustStrip />
-      <CategoriesSection />
-      <FlashOfferSection />
-      <ProductRail kind="new" />
       <CampaignPromoBanner />
+      <TrustStrip />
+      <FlashOfferSection />
+      <CategoriesSection />
+      <ProductRail kind="new" />
       <ProductRail kind="bestseller" />
       <LookBundle />
       <ReviewsSection />

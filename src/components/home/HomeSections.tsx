@@ -1,25 +1,22 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Headset, RotateCcw, Truck, WalletCards } from "lucide-react";
-import type { CSSProperties } from "react";
-import { campaigns } from "@/campaigns";
 import { modeBrand } from "@/brands/mode/brand";
 import { images } from "@/brands/mode/images";
 import { products } from "@/brands/mode/products";
-import { formatFCFA } from "@/core/lib/format";
 import { buildWhatsAppUrl } from "@/core/lib/whatsapp";
-import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductCarousel } from "@/components/product/ProductCarousel";
-import { ActiveCampaignCountdown } from "@/components/home/CampaignCountdown";
 import { NewsletterSignup } from "@/components/home/NewsletterSignup";
+import { CampaignTeaserCards } from "@/components/home/CampaignTeaserCards";
+import { ActiveCampaignCollection } from "@/components/home/ActiveCampaignCollection";
 
 const trustItems = [
   { title: "Livraison au Bénin", icon: Truck },
   { title: "Paiement à la livraison", icon: WalletCards },
-  { title: "Retours faciles", icon: RotateCcw },
+  { title: "Conditions de retour affichées", icon: RotateCcw },
   { title: "Support WhatsApp", icon: Headset },
 ];
 
@@ -89,34 +86,7 @@ export function CategoriesSection() {
 }
 
 export function FlashOfferSection() {
-  const product = products.find((item) => item.oldPrice) ?? products[0];
-  if (!product) return null;
-  const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
-
-  return (
-    <section className="bg-surface-soft py-10 sm:py-14" id="promos">
-      <Container>
-        <Card className="grid items-center gap-5 !p-3 sm:grid-cols-[0.75fr_1fr] sm:gap-8 sm:!p-5">
-          <Link aria-label={`Voir ${product.name}`} className="relative block aspect-[4/5] max-h-[560px] overflow-hidden rounded-[var(--radius-card)] bg-surface-soft" href={`/produit/${product.slug}`}>
-            <SmartImage alt={product.name} focus={images.focus.flashOffer} sizes="(max-width: 639px) 88vw, 34vw" src={product.images[0] ?? images.products.urban} />
-            {discount ? <div className="absolute left-3 top-3"><Badge variant="promo">-{discount}%</Badge></div> : null}
-          </Link>
-          <div className="px-2 pb-2 sm:px-0 sm:py-3 sm:pr-5">
-            <p className="eyebrow">Offre flash</p>
-            <h2 className="mt-2 font-heading font-bold">{product.name}</h2>
-            <p className="mt-2 text-sm text-muted">Une pièce choisie pour son confort et sa silhouette contemporaine.</p>
-            <ActiveCampaignCountdown className="mt-4" />
-            <div className="mt-3 flex flex-wrap items-baseline gap-2">
-              <span className="text-lg font-bold">{formatFCFA(product.price)}</span>
-              {product.oldPrice ? <del className="text-sm text-promo">{formatFCFA(product.oldPrice)}</del> : null}
-            </div>
-            <p className="mt-2 text-sm text-muted">Sélection disponible pendant la campagne en cours.</p>
-            <Link className="primary-cta mt-4 inline-flex min-h-12 items-center justify-center rounded-[var(--radius-button)] px-5 text-sm font-bold" href={`/produit/${product.slug}`}>Découvrir l’offre</Link>
-          </div>
-        </Card>
-      </Container>
-    </section>
-  );
+  return <ActiveCampaignCollection />;
 }
 
 export function ProductRail({ kind }: { kind: "new" | "bestseller" }) {
@@ -144,7 +114,7 @@ export function ReviewsSection() {
   return (
     <section className="bg-surface-soft py-10 sm:py-14" id="avis">
       <Container>
-        <SectionHeading eyebrow="Vos mots" title="Elles et ils en parlent" description="Des retours de clientes et clients au Bénin." />
+        <SectionHeading eyebrow="Exemples de démonstration" title="Avis clients" description="Témoignages fictifs affichés pour la démonstration, à remplacer par des avis clients vérifiés." />
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
           {reviews.map((review) => (
             <Card key={review.name}>
@@ -161,35 +131,7 @@ export function ReviewsSection() {
 }
 
 export function CampaignTeasers() {
-  return (
-    <section className="py-10 sm:py-14" aria-labelledby="campaigns-title">
-      <Container>
-        <SectionHeading eyebrow="Au fil des saisons" title="Trois temps forts, une même boutique" />
-        <div className="grid gap-3 sm:grid-cols-3">
-          {Object.values(campaigns).map((campaign) => (
-            <Card
-              className="campaign-block campaign-card !p-4 sm:!p-5"
-              key={campaign.id}
-              style={{
-                "--camp-bg": campaign.colors.bg,
-                "--camp-ink": campaign.colors.ink,
-                "--camp-accent": campaign.colors.accent,
-                "--camp-accent-ink": campaign.colors.accentInk,
-              } as CSSProperties & Record<`--${string}`, string>}
-              variant="interactive"
-            >
-              <p className="eyebrow text-campaign-ink">Campagne KORA</p>
-              <h3 className="mt-2 font-heading font-bold">{campaign.name}</h3>
-              <p className="mt-2 text-sm leading-6 opacity-85">{campaign.collectionTitle}</p>
-              <Link className="campaign-accent mt-4 inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-button)] px-4 text-sm font-bold" href="#campagne">
-                Explorer <ArrowRight aria-hidden="true" size={16} />
-              </Link>
-            </Card>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
+  return <CampaignTeaserCards />;
 }
 
 export function WhatsAppAndNewsletter() {

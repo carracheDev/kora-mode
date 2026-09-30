@@ -21,6 +21,7 @@ export const blackfriday: Campaign = {
     ctaLabel: "Voir les offres",
     ctaHref: "#promos",
     secondaryLabel: "Explorer la collection",
+    secondaryHref: "#categories",
     image: images.hero.blackfriday,
     endsAt: "2026-11-30T23:59:59+01:00",
   },
@@ -35,5 +36,6 @@ export const blackfriday: Campaign = {
     promoCode: "BF40",
   },
   collectionTitle: "La sélection Black Friday",
+  productIds: ["urban-bomber", "dakar-relaxed-jean", "ayo-structured-bag"],
   promoCode: { code: "BF40", percent: 40 },
 };

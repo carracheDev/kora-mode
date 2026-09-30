@@ -40,10 +40,9 @@ export function CampaignProvider({
   initialCampaign: Campaign;
   children: ReactNode;
 }) {
-  const demoEnabled = process.env.NEXT_PUBLIC_DEMO === "true";
   const campaignId = useSyncExternalStore(
-    demoEnabled ? subscribeToCampaign : () => () => {},
-    () => (demoEnabled ? window.localStorage.getItem(campaignStorageKey) ?? initialCampaign.id : initialCampaign.id),
+    subscribeToCampaign,
+    () => window.localStorage.getItem(campaignStorageKey) ?? initialCampaign.id,
     () => initialCampaign.id,
   );
   const campaign = getCampaign(campaignId);
@@ -53,7 +52,6 @@ export function CampaignProvider({
   }, [campaign]);
 
   function selectCampaign(id: string) {
-    if (!demoEnabled) return;
     window.localStorage.setItem(campaignStorageKey, getCampaign(id).id);
     window.dispatchEvent(new Event(campaignChangeEvent));
   }

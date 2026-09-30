@@ -14,12 +14,12 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { ProductVariantSelector, useProductVariantSelection } from "@/components/product/ProductVariantSelector";
 
 const catalogReferenceTime = Date.now();
 
 export function ProductCard({ product }: { product: Product }) {
-  const [size, setSize] = useState("");
-  const [color, setColor] = useState("");
+  const { size, color, setSize, setColor } = useProductVariantSelection();
   const [sheetOpen, setSheetOpen] = useState(false);
   const favorite = useFavoritesStore((state) => state.productIds.includes(product.id));
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
@@ -141,25 +141,9 @@ export function ProductCard({ product }: { product: Product }) {
                 <button aria-label="Fermer" className="grid size-10 place-items-center rounded-full bg-surface-soft" onClick={() => setSheetOpen(false)} type="button"><X aria-hidden="true" size={19} /></button>
               </div>
 
-              <fieldset className="mt-5">
-                <legend className="text-sm font-semibold">Taille</legend>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {product.sizes.map((option) => (
-                    <button aria-pressed={size === option} className={`min-h-11 min-w-11 rounded-[var(--radius-button)] border px-3 text-sm font-semibold ${size === option ? "border-primary bg-primary text-primary-ink" : "border-line bg-surface text-ink"}`} key={option} onClick={() => setSize(option)} type="button">{option}</button>
-                  ))}
-                </div>
-              </fieldset>
-
-              {product.colors.length > 1 ? (
-                <fieldset className="mt-4">
-                  <legend className="text-sm font-semibold">Couleur</legend>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {product.colors.map((option) => (
-                      <button aria-pressed={color === option.name} className={`min-h-10 rounded-[var(--radius-pill)] border px-4 text-sm ${color === option.name ? "border-primary bg-surface-mint font-semibold text-primary" : "border-line bg-surface text-ink"}`} key={option.name} onClick={() => setColor(option.name)} type="button"><span aria-hidden="true" className="mr-2 inline-block size-4 rounded-full border border-line align-middle" style={{ backgroundColor: option.hex }} />{option.name}</button>
-                    ))}
-                  </div>
-                </fieldset>
-              ) : null}
+              <div className="mt-5">
+                <ProductVariantSelector color={color} onColorChange={setColor} onSizeChange={setSize} product={product} size={size} />
+              </div>
 
               <Button className="mt-6 w-full" disabled={!size} onClick={addToCart}>
                 Ajouter au panier

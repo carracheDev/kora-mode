@@ -16,7 +16,7 @@ export function CampaignPromoBanner() {
           <p className="mt-1 text-sm text-campaign-ink/85">Utilisez le code <strong>{campaign.promoCode.code}</strong> à la commande.</p>
         </div>
         <Link className="campaign-accent inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-[var(--radius-button)] px-5 text-sm font-bold" href="#promos">
-          Voir les offres <ArrowRight aria-hidden="true" size={17} />
+          {campaign.hero.ctaLabel} <ArrowRight aria-hidden="true" size={17} />
         </Link>
       </div>
     </section>

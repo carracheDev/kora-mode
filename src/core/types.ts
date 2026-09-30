@@ -30,6 +30,7 @@ export type CartItem = {
 };
 
 export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+export type PaymentStatus = "pending" | "succeeded" | "failed";
 
 export type Order = {
   id: string;
@@ -41,6 +42,12 @@ export type Order = {
   createdAt: string;
   customerName: string;
   customerPhone: string;
+  customerCity?: string;
+  customerAddress?: string;
+  paymentMethod?: "mtn" | "moov" | "celtiis" | "cod";
+  paymentStatus?: PaymentStatus;
+  promoCode?: string;
+  promoDiscount?: number;
 };
 
 export type Campaign = CampaignDefinition;

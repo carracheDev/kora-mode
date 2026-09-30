@@ -21,6 +21,7 @@ export const nouvelan: Campaign = {
     ctaLabel: "Voir la nouvelle sélection",
     ctaHref: "#promos",
     secondaryLabel: "Découvrir KORA",
+    secondaryHref: "#nouveautes",
     image: images.hero.nouvelan,
     endsAt: "2027-01-05T23:59:59+01:00",
   },
@@ -35,5 +36,6 @@ export const nouvelan: Campaign = {
     promoCode: "2027",
   },
   collectionTitle: "La nouvelle sélection",
+  productIds: ["nova-blazer", "atlas-wide-leg", "lune-crop-top"],
   promoCode: { code: "2027", percent: 10 },
 };

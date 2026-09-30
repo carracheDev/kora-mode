@@ -186,9 +186,9 @@ export function MobileMenu({
           </section>
 
           <div aria-label="Actions rapides" className="mt-4 grid grid-cols-3 gap-2">
-            <Card className="!p-2" variant="soft"><a className="flex min-h-[76px] flex-col items-center justify-center gap-1 text-center text-sm font-semibold" href="#favoris" onClick={onClose}><Heart aria-hidden="true" size={18} />Favoris ({favoriteCount})</a></Card>
-            <Card className="!p-2" variant="soft"><a className="flex min-h-[76px] flex-col items-center justify-center gap-1 text-center text-sm font-semibold" href="#compte" onClick={onClose}><UserRound aria-hidden="true" size={18} />Mon compte</a></Card>
-            <Card className="!p-2" variant="soft"><a className="flex min-h-[76px] flex-col items-center justify-center gap-1 text-center text-sm font-semibold" href="#suivi" onClick={onClose}><PackageSearch aria-hidden="true" size={18} />Suivre ma commande</a></Card>
+            <Card className="!p-2" variant="soft"><a className="flex min-h-[76px] flex-col items-center justify-center gap-1 text-center text-sm font-semibold" href="/favoris" onClick={onClose}><Heart aria-hidden="true" size={18} />Favoris ({favoriteCount})</a></Card>
+            <Card className="!p-2" variant="soft"><a className="flex min-h-[76px] flex-col items-center justify-center gap-1 text-center text-sm font-semibold" href="/compte" onClick={onClose}><UserRound aria-hidden="true" size={18} />Mon compte</a></Card>
+            <Card className="!p-2" variant="soft"><a className="flex min-h-[76px] flex-col items-center justify-center gap-1 text-center text-sm font-semibold" href="/commandes" onClick={onClose}><PackageSearch aria-hidden="true" size={18} />Suivre ma commande</a></Card>
           </div>
 
           <div className="mt-5 grid gap-3">

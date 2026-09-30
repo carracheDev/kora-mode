@@ -21,6 +21,7 @@ export const noel: Campaign = {
     ctaLabel: "Découvrir les idées cadeaux",
     ctaHref: "#promos",
     secondaryLabel: "Voir les nouveautés",
+    secondaryHref: "#promos",
     image: images.hero.noel,
     endsAt: "2026-12-25T23:59:59+01:00",
   },
@@ -35,5 +36,6 @@ export const noel: Campaign = {
     promoCode: "NOEL15",
   },
   collectionTitle: "Les idées cadeaux KORA",
+  productIds: ["ayo-structured-bag", "blanc-studio-sneakers", "nova-blazer"],
   promoCode: { code: "NOEL15", percent: 15 },
 };

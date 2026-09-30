@@ -115,9 +115,9 @@ export function Header() {
 
           <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             <button aria-label="Ouvrir la recherche" className="relative grid size-11 place-items-center rounded-[var(--radius-pill)] text-ink hover:bg-surface" onClick={() => setSearchOpen(true)} title="Rechercher" type="button"><Search aria-hidden="true" size={20} strokeWidth={1.8} /></button>
-            <CountLink href="#favoris" label="Favoris" count={favoriteCount}><Heart aria-hidden="true" size={20} strokeWidth={1.8} /></CountLink>
-            <div className="hidden sm:block"><CountLink href="#compte" label="Mon compte"><UserRound aria-hidden="true" size={20} strokeWidth={1.8} /></CountLink></div>
-            <CountLink href="#panier" label="Panier" count={cartCount}><ShoppingBag aria-hidden="true" size={20} strokeWidth={1.8} /></CountLink>
+            <CountLink href="/favoris" label="Favoris" count={favoriteCount}><Heart aria-hidden="true" size={20} strokeWidth={1.8} /></CountLink>
+            <div className="hidden sm:block"><CountLink href="/compte" label="Mon compte"><UserRound aria-hidden="true" size={20} strokeWidth={1.8} /></CountLink></div>
+            <CountLink href="/panier" label="Panier" count={cartCount}><ShoppingBag aria-hidden="true" size={20} strokeWidth={1.8} /></CountLink>
           </div>
         </div>
       </header>

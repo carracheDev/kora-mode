@@ -22,6 +22,7 @@ export type Campaign = {
     ctaLabel: string;
     ctaHref: string;
     secondaryLabel: string;
+    secondaryHref: string;
     image: string;
     endsAt?: string;
   };
@@ -36,6 +37,7 @@ export type Campaign = {
     promoCode: string;
   };
   collectionTitle: string;
+  productIds: string[];
   promoCode: {
     code: string;
     percent: number;
