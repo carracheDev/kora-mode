@@ -41,6 +41,8 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
     const mobilePreference = window.matchMedia("(max-width: 767px)");
     const updateMobileState = () => {
       mobile.current = mobilePreference.matches;
+      if (mobile.current && autoScrollOnMobile) track.scrollLeft = group.offsetWidth;
+      else if (!mobile.current) track.scrollLeft = 0;
       syncPauseState();
     };
     const updatePageVisibility = () => {
@@ -63,9 +65,11 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
     const animate = (time: number) => {
       if (previousTime && !paused.current) {
         const elapsed = Math.min(time - previousTime, 40);
-        track.scrollLeft += elapsed * 0.04;
         const loopWidth = group.offsetWidth;
-        if (loopWidth > 0 && track.scrollLeft >= loopWidth) track.scrollLeft -= loopWidth;
+        if (loopWidth > 0 && autoScrollOnMobile) {
+          track.scrollLeft -= elapsed * 0.012;
+          if (track.scrollLeft <= 0) track.scrollLeft += loopWidth;
+        }
       }
       previousTime = time;
       updateControls();
@@ -80,7 +84,7 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
       mobilePreference.removeEventListener("change", updateMobileState);
       document.removeEventListener("visibilitychange", updatePageVisibility);
     };
-  }, [syncPauseState, updateControls, products.length]);
+  }, [autoScrollOnMobile, syncPauseState, updateControls, products.length]);
 
   function handleTouchStart() {
     touching.current = true;
@@ -128,12 +132,12 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
     >
       <div
         aria-label="Faire défiler les produits"
-        className="scrollbar-hidden -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:gap-4 sm:px-0"
+        className={`scrollbar-hidden -mx-4 flex ${autoScrollOnMobile ? "snap-none md:snap-x md:snap-mandatory" : "snap-x snap-mandatory"} gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:gap-4 sm:px-0`}
         onScroll={updateControls}
         ref={trackRef}
       >
-        <ProductGroup products={products} groupRef={groupRef} />
         {autoScrollOnMobile ? <ProductGroup ariaHidden className="md:hidden" products={products} /> : null}
+        <ProductGroup products={products} groupRef={groupRef} />
       </div>
       <div className="pointer-events-none absolute -top-[58px] right-0 hidden gap-2 md:flex">
         <button
