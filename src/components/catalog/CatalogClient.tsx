@@ -8,6 +8,7 @@ import { Check, ChevronDown, Copy, Search, SlidersHorizontal, X } from "lucide-r
 import { products } from "@/brands/mode/products";
 import { buildQuery, filterProducts, readCatalogFilters, sortProducts, type CatalogFilters, type CatalogQueryPatch } from "@/core/lib/catalog";
 import { useCampaign } from "@/providers/CampaignProvider";
+import { isOfferActive } from "@/core/lib/promo";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
@@ -274,7 +275,13 @@ export function CatalogClient() {
   ].filter((chip): chip is { key: string; label: string; value: string | boolean } => chip !== null);
   const previewCount = filterProducts(products, draftFilters).length;
 
+  const offerActive = isOfferActive(campaign.flashOffer.endsAt);
+
   async function copyCampaignCode() {
+    if (!isOfferActive(campaign.flashOffer.endsAt)) {
+      showToast("Cette offre est terminée.");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(campaign.promoCode.code);
       showToast("Code copié");
@@ -289,9 +296,9 @@ export function CatalogClient() {
         <Container className="flex min-h-12 flex-wrap items-center justify-between gap-3 py-2 text-sm">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="font-semibold">{campaign.name}</span>
-            <span className="text-campaign-ink/85">Code {campaign.promoCode.code} : -{campaign.promoCode.percent}% appliqué au paiement</span>
+            <span className="text-campaign-ink/85">{offerActive ? `Code ${campaign.promoCode.code} : -${campaign.promoCode.percent}% à la commande` : `Campagne ${campaign.name} terminée · sélection consultable sans offre`}</span>
           </div>
-          <button className="campaign-accent inline-flex min-h-9 items-center gap-2 rounded-[var(--radius-pill)] px-3 text-xs font-semibold" onClick={copyCampaignCode} type="button"><Copy aria-hidden="true" size={14} />Copier le code</button>
+          {offerActive ? <button className="campaign-accent inline-flex min-h-9 items-center gap-2 rounded-[var(--radius-pill)] px-3 text-xs font-semibold" onClick={copyCampaignCode} type="button"><Copy aria-hidden="true" size={14} />Copier le code</button> : null}
         </Container>
       </section>
       <Container className="py-7 pb-2 sm:py-10">

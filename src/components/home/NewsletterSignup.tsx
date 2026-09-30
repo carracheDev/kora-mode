@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/ToastProvider";
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function NewsletterSignup() {
+  const inputId = useId();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const { showToast } = useToast();
@@ -21,16 +22,17 @@ export function NewsletterSignup() {
     }
     setError("");
     setEmail("");
-    showToast("Merci, vous êtes inscrit(e).");
+    showToast("Test terminé : aucun abonnement réel n’a été enregistré.");
   }
 
   return (
     <form className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]" noValidate onSubmit={handleSubmit}>
+      <p className="text-xs leading-5 text-muted sm:col-span-2">Formulaire de démonstration : votre adresse n’est envoyée ni enregistrée.</p>
       <Input
         autoComplete="email"
         error={error}
-        id="home-newsletter-email"
-        label="Votre adresse e-mail"
+        id={inputId}
+        label="Votre adresse e-mail (démo)"
         name="email"
         onChange={(event) => {
           setEmail(event.target.value);

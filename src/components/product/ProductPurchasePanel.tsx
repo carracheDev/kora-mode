@@ -155,9 +155,10 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
           Ajouter au panier
         </Button>
       </div>
-      <Button className="w-full" disabled={!hasVariants || !available} onClick={() => window.open(whatsappUrl, "_blank", "noopener,noreferrer")} variant="secondary">
+      <Button className="w-full" disabled={!hasVariants || !available || !whatsappUrl} onClick={() => { if (whatsappUrl) window.open(whatsappUrl, "_blank", "noopener,noreferrer"); }} variant="secondary">
         Commander via WhatsApp
       </Button>
+      {!whatsappUrl ? <p className="text-xs text-muted">Numéro WhatsApp de démonstration non configuré.</p> : null}
       <div className="flex flex-wrap gap-2">
         <Button className="!px-3" onClick={() => { toggleFavorite(product.id); showToast(favorite ? "Retiré des favoris." : "Ajouté aux favoris.", "favorite"); }} variant="ghost">
           <Heart aria-hidden="true" className={favorite ? "fill-primary text-primary" : ""} size={18} />

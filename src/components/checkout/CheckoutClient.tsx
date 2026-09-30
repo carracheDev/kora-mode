@@ -7,8 +7,9 @@ import { ArrowLeft, Check, Smartphone, Wallet } from "lucide-react";
 import { products } from "@/brands/mode/products";
 import { useCampaign } from "@/providers/CampaignProvider";
 import { formatFCFA } from "@/core/lib/format";
+import { isOfferActive } from "@/core/lib/promo";
 import { deliveryOptions } from "@/core/lib/delivery";
-import { getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
+import { getCartItemBaseTotal, getCartItemDiscount, getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
 import { useCartStore } from "@/core/store/cart";
 import { useOrdersStore } from "@/core/store/orders";
 import type { Order } from "@/core/types";
@@ -55,6 +56,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
 
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), []);
   const validItems = items.filter((item) => productById.has(item.productId));
+  const offerActive = isOfferActive(campaign.flashOffer.endsAt);
   const stockIssues = [...new Set(validItems.map((item) => item.productId))].filter((productId) => {
     const product = productById.get(productId)!;
     const requested = validItems.reduce((sum, item) => item.productId === productId ? sum + item.quantity : sum, 0);
@@ -63,7 +65,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
   const getProduct = (productId: string) => productById.get(productId);
   const subtotal = getCartSubtotal(validItems, getProduct);
   const eligibleSubtotal = getEligibleSubtotal(validItems, campaign.productIds, getProduct);
-  const validPromo = promoApplied && promoCode.trim().toUpperCase() === campaign.promoCode.code.toUpperCase() && eligibleSubtotal > 0;
+  const validPromo = offerActive && promoApplied && promoCode.trim().toUpperCase() === campaign.promoCode.code.toUpperCase() && eligibleSubtotal > 0;
   const discount = validPromo ? getPromoDiscount(subtotal, eligibleSubtotal, campaign.promoCode.percent) : 0;
   const delivery = deliveryOptions.find((option) => option.city === city) ?? deliveryOptions[0];
   const total = Math.max(0, subtotal - discount) + delivery.fee;
@@ -73,6 +75,9 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
     if (entered !== campaign.promoCode.code.toUpperCase()) {
       setPromoApplied(false);
       setPromoMessage("Ce code ne correspond pas à la campagne active.");
+    } else if (!isOfferActive(campaign.flashOffer.endsAt)) {
+      setPromoApplied(false);
+      setPromoMessage("Cette offre est terminée.");
     } else if (eligibleSubtotal <= 0) {
       setPromoApplied(false);
       setPromoMessage("Le panier ne contient aucun article éligible à cette offre.");
@@ -85,6 +90,11 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
   function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!validItems.length) return;
+    if (promoApplied && !isOfferActive(campaign.flashOffer.endsAt)) {
+      setPromoApplied(false);
+      setPromoMessage("Cette offre est terminée. Le code promo a été retiré.");
+      return;
+    }
     if (stockIssues.length) {
       setFormError("Une quantité demandée dépasse le stock disponible. Ajustez votre panier avant de continuer.");
       return;
@@ -166,8 +176,8 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
           <aside aria-label="Récapitulatif de commande" className="lg:sticky lg:top-24">
             <Card className="grid gap-4">
               <h2 className="font-heading text-xl font-bold">Votre commande</h2>
-              <ul className="grid gap-3 border-b border-line pb-4">{validItems.map((item, index) => { const product = productById.get(item.productId)!; return <li className="flex justify-between gap-4 text-sm" key={`${item.productId}-${item.size}-${item.color}-${index}`}><span className="text-muted">{product.name} × {item.quantity}{item.size ? ` · ${item.size}` : ""}{item.color ? ` · ${item.color}` : ""}</span><span className="shrink-0 font-semibold">{formatFCFA(getCartItemTotal(item, product))}</span></li>; })}</ul>
-              {campaign.productIds.some((id) => validItems.some((item) => item.productId === id)) ? <div className="grid gap-2"><label className="text-sm font-semibold" htmlFor="checkout-promo">Code promo</label><div className="flex gap-2"><input autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-[var(--radius-button)] border border-line bg-surface px-3 text-sm uppercase text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" id="checkout-promo" onChange={(event) => { setPromoCode(event.target.value); setPromoApplied(false); setPromoMessage(""); }} value={promoCode} /><Button className="!px-3 !text-sm" onClick={applyPromo} type="button" variant="secondary">Appliquer</Button></div><p aria-live="polite" className={`text-xs ${promoMessage ? (validPromo ? "text-success" : "text-error") : "text-muted"}`}>{promoMessage || (validPromo ? `${campaign.promoCode.code} appliqué à la sélection éligible.` : `Code campagne : ${campaign.promoCode.code} (−${campaign.promoCode.percent}%).`)}</p></div> : null}
+              <ul className="grid gap-3 border-b border-line pb-4">{validItems.map((item, index) => { const product = productById.get(item.productId)!; const lineDiscount = getCartItemDiscount(item, product); return <li className="flex justify-between gap-4 text-sm" key={`${item.productId}-${item.size}-${item.color}-${index}`}><span className="text-muted">{product.name} × {item.quantity}{item.size ? ` · ${item.size}` : ""}{item.color ? ` · ${item.color}` : ""}</span><span className="shrink-0 text-right">{lineDiscount > 0 ? <del className="block text-xs text-muted">{formatFCFA(getCartItemBaseTotal(item, product))}</del> : null}<span className="block font-semibold">{formatFCFA(getCartItemTotal(item, product))}</span>{lineDiscount > 0 ? <span className="block text-xs text-success">Look complet −{item.discountPercent}%</span> : null}</span></li>; })}</ul>
+              {campaign.productIds.some((id) => validItems.some((item) => item.productId === id)) ? (offerActive ? <div className="grid gap-2"><label className="text-sm font-semibold" htmlFor="checkout-promo">Code promo</label><div className="flex gap-2"><input autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-[var(--radius-button)] border border-line bg-surface px-3 text-sm uppercase text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" id="checkout-promo" onChange={(event) => { setPromoCode(event.target.value); setPromoApplied(false); setPromoMessage(""); }} value={promoCode} /><Button className="!px-3 !text-sm" onClick={applyPromo} type="button" variant="secondary">Appliquer</Button></div><p aria-live="polite" className={`text-xs ${promoMessage ? (validPromo ? "text-success" : "text-error") : "text-muted"}`}>{promoMessage || (validPromo ? `${campaign.promoCode.code} appliqué à la sélection éligible.` : `Code campagne : ${campaign.promoCode.code} (−${campaign.promoCode.percent}%).`)}</p></div> : <p className="text-sm text-muted">L’offre {campaign.name} est terminée; aucun code de cette campagne ne peut être appliqué.</p>) : null}
               <div className="grid gap-3 border-t border-line pt-3 text-sm">
                 <div className="flex justify-between gap-3"><span className="text-muted">Sous-total</span><span>{formatFCFA(subtotal)}</span></div>
                 {discount ? <div className="flex justify-between gap-3 text-success"><span>Remise {campaign.promoCode.code}</span><span>−{formatFCFA(discount)}</span></div> : null}

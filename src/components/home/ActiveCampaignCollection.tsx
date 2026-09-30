@@ -1,6 +1,7 @@
 "use client";
 
 import { useCampaign } from "@/providers/CampaignProvider";
+import { isOfferActive } from "@/core/lib/promo";
 import { products } from "@/brands/mode/products";
 import { Container } from "@/components/ui/Container";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -8,6 +9,7 @@ import { ActiveCampaignCountdown } from "@/components/home/CampaignCountdown";
 
 export function ActiveCampaignCollection() {
   const { campaign } = useCampaign();
+  const offerActive = isOfferActive(campaign.flashOffer.endsAt);
   const campaignProducts = campaign.productIds
     .map((productId) => products.find((product) => product.id === productId))
     .filter((product) => product !== undefined);
@@ -19,7 +21,7 @@ export function ActiveCampaignCollection() {
           <div>
             <p className="eyebrow">Sélection {campaign.name}</p>
             <h2 className="mt-1 font-heading font-bold" id="active-campaign-title">{campaign.collectionTitle}</h2>
-            <p className="mt-2 text-sm text-muted">{campaign.flashOffer.title} · Code {campaign.promoCode.code}</p>
+            <p className="mt-2 text-sm text-muted">{offerActive ? `${campaign.flashOffer.title} · Code ${campaign.promoCode.code}` : "Campagne terminée · sélection consultable sans remise"}</p>
           </div>
           <ActiveCampaignCountdown />
         </div>

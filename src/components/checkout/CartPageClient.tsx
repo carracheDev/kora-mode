@@ -7,7 +7,8 @@ import { useCampaign } from "@/providers/CampaignProvider";
 import { products } from "@/brands/mode/products";
 import { images } from "@/brands/mode/images";
 import { formatFCFA } from "@/core/lib/format";
-import { getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
+import { isOfferActive } from "@/core/lib/promo";
+import { getCartItemBaseTotal, getCartItemDiscount, getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
 import { useCartStore } from "@/core/store/cart";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -37,17 +38,24 @@ export function CartPageClient() {
   const { campaign } = useCampaign();
 
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), []);
+  const offerActive = isOfferActive(campaign.flashOffer.endsAt);
   const getProduct = (productId: string) => productById.get(productId);
   const subtotal = getCartSubtotal(items, getProduct);
   const eligibleSubtotal = getEligibleSubtotal(items, campaign.productIds, getProduct);
-  const promoDiscount = promoState?.valid ? getPromoDiscount(subtotal, eligibleSubtotal, campaign.promoCode.percent) : 0;
+  const promoDiscount = promoState?.valid && offerActive ? getPromoDiscount(subtotal, eligibleSubtotal, campaign.promoCode.percent) : 0;
+  const promoMessage = promoState ? (promoState.valid && !offerActive ? "Cette offre est terminée." : promoState.message) : (offerActive ? `Code campagne : ${campaign.promoCode.code} (−${campaign.promoCode.percent}% sur la sélection éligible).` : `Offre ${campaign.name} terminée.`);
+  const promoIsValid = Boolean(promoState?.valid && offerActive);
   const total = Math.max(0, subtotal - promoDiscount);
-  const checkoutHref = `/checkout${promoState?.valid ? `?code=${encodeURIComponent(campaign.promoCode.code)}` : ""}`;
+  const checkoutHref = `/checkout${promoState?.valid && offerActive ? `?code=${encodeURIComponent(campaign.promoCode.code)}` : ""}`;
 
   function applyPromo() {
     const enteredCode = promoInput.trim().toLocaleUpperCase("fr-BJ");
     if (!enteredCode || enteredCode !== campaign.promoCode.code.toLocaleUpperCase("fr-BJ")) {
       setPromoState({ code: enteredCode, valid: false, message: "Ce code ne correspond pas à la campagne active." });
+      return;
+    }
+    if (!isOfferActive(campaign.flashOffer.endsAt)) {
+      setPromoState({ code: enteredCode, valid: false, message: "Cette offre est terminée." });
       return;
     }
     if (eligibleSubtotal <= 0) {
@@ -88,6 +96,7 @@ export function CartPageClient() {
                   return <Card className="flex items-center justify-between gap-4" key={`${item.productId}-${item.size}-${item.color}-${index}`}><p className="text-sm text-muted">Cet article n’est plus disponible dans le catalogue.</p><button aria-label="Supprimer cet article" className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-soft hover:text-error" onClick={() => removeItem(item.productId, item.size, item.color, item.bundleId)} type="button"><Trash2 aria-hidden="true" size={18} /></button></Card>;
                 }
                 const lineTotal = getCartItemTotal(item, product);
+                const lineDiscount = getCartItemDiscount(item, product);
                 const productQuantity = items.reduce((sum, cartItem) => cartItem.productId === item.productId ? sum + cartItem.quantity : sum, 0);
                 return (
                   <Card className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 !p-3 sm:grid-cols-[112px_minmax(0,1fr)] sm:gap-4 sm:!p-4" key={`${item.productId}-${item.size}-${item.color}-${index}`}>
@@ -109,7 +118,11 @@ export function CartPageClient() {
                           <span aria-live="polite" className="min-w-8 text-center text-sm font-semibold">{item.quantity}</span>
                           <button aria-label={`Augmenter la quantité de ${product.name}`} className="grid size-10 place-items-center text-ink disabled:text-muted" disabled={productQuantity >= product.stock} onClick={() => setQuantity(item.productId, item.quantity + 1, item.size, item.color, item.bundleId)} type="button"><Plus aria-hidden="true" size={15} /></button>
                         </div>
-                        <p className="text-sm font-bold text-ink">{formatFCFA(lineTotal)}</p>
+                        <div className="text-right">
+                          {lineDiscount > 0 ? <del className="block text-xs text-muted">{formatFCFA(getCartItemBaseTotal(item, product))}</del> : null}
+                          <p className="text-sm font-bold text-ink">{formatFCFA(lineTotal)}</p>
+                          {lineDiscount > 0 ? <p className="text-xs text-success">Look complet −{item.discountPercent}%</p> : null}
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -126,7 +139,7 @@ export function CartPageClient() {
                     <input autoCapitalize="characters" autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-[var(--radius-button)] border border-line bg-surface px-3 text-sm uppercase text-ink placeholder:normal-case focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" id="cart-promo" onChange={(event) => { setPromoInput(event.target.value); setPromoState(null); }} placeholder="Ex. BF40" value={promoInput} />
                     <Button className="!px-3 !text-sm" type="submit" variant="secondary">Appliquer</Button>
                   </div>
-                  <p aria-live="polite" className={`min-h-5 text-xs ${promoState?.valid ? "text-success" : promoState ? "text-error" : "text-muted"}`}>{promoState?.message ?? `Code actif : ${campaign.promoCode.code} (−${campaign.promoCode.percent}% sur la sélection éligible).`}</p>
+                  <p aria-live="polite" className={`min-h-5 text-xs ${promoIsValid ? "text-success" : promoState || !offerActive ? "text-error" : "text-muted"}`}>{promoMessage}</p>
                 </form>
                 <div className="grid gap-3 border-t border-line pt-4 text-sm">
                   <div className="flex justify-between gap-3"><span className="text-muted">Sous-total</span><span className="font-semibold">{formatFCFA(subtotal)}</span></div>

@@ -3,17 +3,19 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useCampaign } from "@/providers/CampaignProvider";
+import { isOfferActive } from "@/core/lib/promo";
 
 export function AnnouncementBar() {
   const { campaign } = useCampaign();
+  const offerActive = isOfferActive(campaign.flashOffer.endsAt);
   const [visible, setVisible] = useState(true);
 
   if (!visible) return null;
 
   return (
     <div className="relative flex min-h-10 items-center justify-center gap-3 bg-ink px-12 py-2 text-center text-sm font-semibold text-surface">
-      <a className="hover:underline" href={campaign.announcement.link}>
-        {campaign.announcement.text}
+      <a className="hover:underline" href={offerActive ? campaign.announcement.link : "/boutique"}>
+        {offerActive ? campaign.announcement.text : `Campagne ${campaign.name} terminée · découvrir la boutique`}
       </a>
       <button
         aria-label="Masquer l’annonce"

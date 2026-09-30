@@ -4,12 +4,14 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useCampaign } from "@/providers/CampaignProvider";
+import { isOfferActive } from "@/core/lib/promo";
 import { images } from "@/brands/mode/images";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { CampaignCountdown } from "@/components/home/CampaignCountdown";
 
 export function CampaignHero() {
   const { campaign } = useCampaign();
+  const offerActive = isOfferActive(campaign.flashOffer.endsAt);
   const endsAt = campaign.hero.endsAt ?? campaign.flashOffer.endsAt;
 
   return (
@@ -26,12 +28,12 @@ export function CampaignHero() {
             {campaign.hero.title}
           </h1>
           <p className="mt-2 max-w-xl text-base leading-7 text-campaign-ink/85 md:mt-4">
-            {campaign.hero.subtitle}
+            {offerActive ? campaign.hero.subtitle : `La campagne ${campaign.name} est terminée. Parcourez la sélection KORA MODE.`}
           </p>
           <CampaignCountdown className="mt-2 sm:mt-6" endsAt={endsAt} variant="campaign" />
           <div className="mt-1 flex flex-wrap items-center gap-3 sm:mt-7 sm:gap-4">
             <Link className="campaign-accent inline-flex min-h-12 items-center gap-2 rounded-[var(--radius-button)] px-5 text-sm font-bold" href={campaign.hero.ctaHref}>
-              {campaign.hero.ctaLabel} <ArrowRight aria-hidden="true" size={17} />
+              {offerActive ? campaign.hero.ctaLabel : "Voir la sélection"} <ArrowRight aria-hidden="true" size={17} />
             </Link>
             <Link className="inline-flex min-h-12 items-center text-sm font-semibold text-campaign-ink underline underline-offset-4" href={campaign.hero.secondaryHref}>
               {campaign.hero.secondaryLabel}

@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useCampaign } from "@/providers/CampaignProvider";
+import { isOfferActive } from "@/core/lib/promo";
 import { modeBrand } from "@/brands/mode/brand";
 import { useFavoritesStore } from "@/core/store/favorites";
 import { buildWhatsAppUrl } from "@/core/lib/whatsapp";
@@ -49,6 +50,7 @@ export function MobileMenu({
   const drawerRef = useRef<HTMLDivElement>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const { campaign } = useCampaign();
+  const offerActive = isOfferActive(campaign.flashOffer.endsAt);
   const favoriteCount = useFavoritesStore((state) => state.productIds.length);
   const whatsappUrl = buildWhatsAppUrl(
     modeBrand.whatsappNumber,
@@ -154,7 +156,7 @@ export function MobileMenu({
                             </a>
                           )}
                           {link.label === "Nouveautés" ? <Badge variant="new">Nouveau</Badge> : null}
-                          {link.label === "Promos" ? <Badge variant="promo">-{campaign.promoCode.percent}%</Badge> : null}
+                          {link.label === "Promos" && offerActive ? <Badge variant="promo">-{campaign.promoCode.percent}%</Badge> : null}
                         </div>
                         <AnimatePresence initial={false}>
                           {children && expanded ? (
@@ -181,7 +183,7 @@ export function MobileMenu({
           <section aria-label="Campagne en cours" className="campaign-block mt-5 rounded-[var(--radius-card)] p-4">
             <p className="eyebrow opacity-80">{campaign.name}</p>
             <p className="mt-1 font-heading text-xl font-bold">{campaign.collectionTitle}</p>
-            <p className="mt-1 text-sm">Code {campaign.promoCode.code} · -{campaign.promoCode.percent}%</p>
+            <p className="mt-1 text-sm">{offerActive ? `Code ${campaign.promoCode.code} · -${campaign.promoCode.percent}%` : `Campagne ${campaign.name} terminée`}</p>
             <a className="campaign-accent mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-button)] px-4 text-sm font-bold" href={campaign.hero.ctaHref} onClick={onClose}>Voir les offres</a>
           </section>
 
@@ -192,7 +194,7 @@ export function MobileMenu({
           </div>
 
           <div className="mt-5 grid gap-3">
-            <a className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-whatsapp px-4 text-sm font-bold text-surface" href={whatsappUrl} rel="noreferrer" target="_blank"><MessageCircle aria-hidden="true" size={18} />WhatsApp</a>
+            {whatsappUrl ? <a className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-whatsapp px-4 text-sm font-bold text-surface" href={whatsappUrl} rel="noreferrer" target="_blank"><MessageCircle aria-hidden="true" size={18} />WhatsApp</a> : <p className="text-center text-sm text-muted">Numéro WhatsApp de démonstration non configuré.</p>}
             <p className="text-center text-sm text-muted">Livraison au Bénin · Paiement à la livraison</p>
           </div>
         </motion.aside>

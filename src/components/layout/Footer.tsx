@@ -1,7 +1,6 @@
 import { Container } from "@/components/ui/Container";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
 import { modeBrand } from "@/brands/mode/brand";
+import { NewsletterSignup } from "@/components/home/NewsletterSignup";
 import Link from "next/link";
 
 const storefrontLinks: Record<string, string> = {
@@ -9,6 +8,11 @@ const storefrontLinks: Record<string, string> = {
   Vêtements: "/boutique?categorie=vetements",
   Accessoires: "/boutique?categorie=accessoires",
   Promotions: "/boutique?promo=1",
+  WhatsApp: "/contact",
+  Livraison: "/contact#delivery-title",
+  Retours: "/contact#delivery-title",
+  Paiement: "/contact#payment-title",
+  "Questions fréquentes": "/contact#questions-title",
 };
 
 export function Footer() {
@@ -31,9 +35,11 @@ export function Footer() {
               <ul className="mt-4 grid gap-3 text-sm text-footer-text">
                 {column.links.map((link) => (
                   <li key={link}>
-                    <Link className="hover:text-surface" href={storefrontLinks[link] ?? `#${link.toLowerCase().replaceAll(" ", "-")}`}>
-                      {link}
-                    </Link>
+                    {storefrontLinks[link] ? (
+                      <Link className="hover:text-surface" href={storefrontLinks[link]}>{link}</Link>
+                    ) : (
+                      <span>{link} · profil à configurer</span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -50,13 +56,8 @@ export function Footer() {
           <div>
             <h3 className="font-bold text-surface">{modeBrand.footer.newsletter.title}</h3>
             <p className="mt-2 text-sm leading-6 text-footer-text">{modeBrand.footer.newsletter.description}</p>
-            <form className="mt-4 grid gap-3 [&_label]:text-surface">
-              <Input autoComplete="email" label="Votre adresse e-mail" name="footer-email" placeholder="nom@exemple.com" type="email" />
-              <Button type="submit">S’inscrire</Button>
-            </form>
-            <div className="mt-5 flex gap-4 text-sm">
-              {modeBrand.footer.socialLinks.map((social) => <span key={social}>{social}</span>)}
-            </div>
+            <NewsletterSignup />
+            <p className="mt-5 text-sm text-footer-text">Réseaux sociaux : profils à configurer.</p>
           </div>
         </div>
         <div className="mt-10 border-t border-footer-divider pt-5 text-sm text-footer-text">

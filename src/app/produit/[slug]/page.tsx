@@ -14,8 +14,18 @@ type ProductPageProps = PageProps<"/produit/[slug]">;
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = getProductBySlug(slug);
-  if (!product) return { title: "Produit introuvable" };
-  return { title: product.name, description: product.description };
+  if (!product) return { title: "Produit introuvable | KORA MODE", robots: { index: false, follow: false } };
+  return {
+    title: `${product.name} | KORA MODE`,
+    description: product.description,
+    openGraph: {
+      title: `${product.name} | KORA MODE`,
+      description: product.description,
+      type: "website",
+      locale: "fr_BJ",
+      siteName: "KORA MODE",
+    },
+  };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {

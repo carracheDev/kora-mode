@@ -21,7 +21,7 @@ export function WhatsAppFloat({ hideWhatsAppFloat = false }: { hideWhatsAppFloat
     return () => window.removeEventListener("scroll", updateScrollDirection);
   }, []);
 
-  if (hideWhatsAppFloat) return null;
+  if (hideWhatsAppFloat || !href) return null;
 
   return (
     <a
