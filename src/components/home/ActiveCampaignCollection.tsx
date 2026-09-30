@@ -15,9 +15,9 @@ export function ActiveCampaignCollection() {
     .filter((product) => product !== undefined);
 
   return (
-    <section className="bg-surface-soft py-10 sm:py-14" id="promos" aria-labelledby="active-campaign-title">
+    <section className="bg-surface-soft py-8 sm:py-14" id="promos" aria-labelledby="active-campaign-title">
       <Container>
-        <div className="mb-5 grid gap-4 sm:mb-7 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div className="mb-4 grid gap-3 sm:mb-7 sm:gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
             <p className="eyebrow">Sélection {campaign.name}</p>
             <h2 className="mt-1 font-heading font-bold" id="active-campaign-title">{campaign.collectionTitle}</h2>

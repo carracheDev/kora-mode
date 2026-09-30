@@ -92,21 +92,21 @@ export function ProductCard({ product }: { product: Product }) {
             </button>
           </div>
 
-          <div className="pointer-events-none relative z-[2] mt-3 flex min-h-5 items-center justify-between gap-2 text-xs">
+          <div className="pointer-events-none relative z-[2] mt-2 flex min-h-5 items-center justify-between gap-2 text-xs sm:mt-3">
             <p className="truncate text-muted">{product.category}</p>
             <span aria-label={`Note de démonstration ${product.rating} sur 5`} title="Note fictive de démonstration" className="flex shrink-0 items-center gap-1 font-semibold text-ink">
               <span aria-hidden="true" className="text-star">★</span>{product.rating.toFixed(1)} <span className="text-[10px] font-normal text-muted">démo</span>
             </span>
           </div>
 
-          <h3 className="pointer-events-none relative z-[2] mt-1 line-clamp-2 min-h-[3.1rem] text-base font-semibold leading-[1.55] tracking-normal">{product.name}</h3>
+          <h3 className="pointer-events-none relative z-[2] mt-1 line-clamp-2 min-h-12 text-base font-semibold leading-6 tracking-normal sm:min-h-[3.1rem] sm:leading-[1.55]">{product.name}</h3>
 
-          <div className="relative z-[2] mt-2 flex min-h-8 flex-wrap items-baseline gap-x-2 gap-y-1 pt-2">
+          <div className="relative z-[2] mt-1 flex min-h-7 flex-wrap items-baseline gap-x-2 gap-y-1 pt-1 sm:mt-2 sm:min-h-8 sm:pt-2">
             <span className="text-sm font-bold text-ink">{formatFCFA(product.price)}</span>
             {product.oldPrice ? <del className="text-xs text-promo">{formatFCFA(product.oldPrice)}</del> : null}
           </div>
 
-          <p aria-hidden={product.stock >= 5} className="mt-1 min-h-[18px] text-xs text-muted">
+          <p aria-hidden={product.stock >= 5} className="mt-0.5 min-h-4 text-xs text-muted sm:mt-1 sm:min-h-[18px]">
             {product.stock < 5 ? `Stock démo · ${product.stock} unité${product.stock === 1 ? "" : "s"}` : ""}
           </p>
 

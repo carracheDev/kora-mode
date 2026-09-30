@@ -9,7 +9,7 @@ export function StorefrontLayout({ children, hideWhatsAppFloat = false }: { chil
     <>
       <AnnouncementBar />
       <Header />
-      <div className="pb-24">{children}</div>
+      <div className="pb-6 sm:pb-8">{children}</div>
       <Footer />
       <WhatsAppFloat hideWhatsAppFloat={hideWhatsAppFloat} />
     </>

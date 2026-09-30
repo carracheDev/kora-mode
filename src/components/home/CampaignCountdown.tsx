@@ -17,10 +17,12 @@ export function CampaignCountdown({
   endsAt,
   variant = "surface",
   className = "",
+  compact = false,
 }: {
   endsAt: string;
   variant?: "surface" | "campaign";
   className?: string;
+  compact?: boolean;
 }) {
   const [time, setTime] = useState<ReturnType<typeof getTimeLeft> | null>(null);
   const campaignStyle = variant === "campaign";
@@ -58,11 +60,11 @@ export function CampaignCountdown({
   ] as const;
 
   return (
-    <div aria-label="Temps restant pour cette campagne" className={`flex items-center gap-2 sm:gap-3 ${className}`}>
+    <div aria-label="Temps restant pour cette campagne" className={`flex items-center ${compact ? "gap-1.5 sm:gap-3" : "gap-2 sm:gap-3"} ${className}`}>
       {labels.map(([value, label]) => (
-        <div className={`min-w-[54px] rounded-[var(--radius-button)] border px-2 py-2 text-center sm:min-w-[62px] ${campaignStyle ? "border-campaign-ink/15 text-campaign-ink" : "border-line bg-surface text-ink"}`} key={label}>
-          <span className="block font-heading text-xl font-bold tabular-nums sm:text-2xl">{value === undefined ? "--" : String(value).padStart(2, "0")}</span>
-          <span className={`mt-0.5 block text-sm ${campaignStyle ? "text-campaign-ink/75" : "text-muted"}`}>{label}</span>
+        <div className={`rounded-[var(--radius-button)] border text-center ${compact ? "min-w-0 px-1.5 py-1.5 sm:min-w-[62px] sm:px-2 sm:py-2" : "min-w-[54px] px-2 py-2 sm:min-w-[62px]"} ${campaignStyle ? "border-campaign-ink/15 text-campaign-ink" : "border-line bg-surface text-ink"}`} key={label}>
+          <span className={`block font-heading font-bold tabular-nums ${compact ? "text-lg sm:text-2xl" : "text-xl sm:text-2xl"}`}>{value === undefined ? "--" : String(value).padStart(2, "0")}</span>
+          <span className={`mt-0.5 block ${compact ? "text-xs sm:text-sm" : "text-sm"} ${campaignStyle ? "text-campaign-ink/75" : "text-muted"}`}>{label}</span>
         </div>
       ))}
     </div>
@@ -71,5 +73,5 @@ export function CampaignCountdown({
 
 export function ActiveCampaignCountdown({ className = "" }: { className?: string }) {
   const { campaign } = useCampaign();
-  return <CampaignCountdown className={className} endsAt={campaign.flashOffer.endsAt} />;
+  return <CampaignCountdown className={className} compact endsAt={campaign.flashOffer.endsAt} />;
 }
