@@ -297,7 +297,7 @@ export function CatalogClient() {
       <Container className="py-7 pb-2 sm:py-10">
         <nav aria-label="Fil d’Ariane" className="mb-4 text-sm text-muted"><Link className="hover:text-primary" href="/">Accueil</Link><span aria-hidden="true" className="mx-2">/</span><span className="text-ink">Boutique</span></nav>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="eyebrow">La sélection KORA</p><h1 className="mt-1 font-heading font-extrabold">{title}</h1><p aria-live="polite" className="mt-2 text-sm text-muted">{filteredProducts.length} article{filteredProducts.length === 1 ? "" : "s"}</p></div>
+          <div><p className="eyebrow">La sélection KORA</p><h1 className="mt-1 font-heading font-extrabold">{title}</h1><p aria-live="polite" className="mt-2 text-sm text-muted">{filteredProducts.length} article{filteredProducts.length === 1 ? "" : "s"}</p><p className="mt-1 text-xs text-muted">Notes et niveaux de stock affichés pour la démonstration.</p></div>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-2 lg:flex lg:items-center lg:gap-3">
           <div className="relative col-span-2 min-w-0 lg:max-w-[420px] lg:flex-1">

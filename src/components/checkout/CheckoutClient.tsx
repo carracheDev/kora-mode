@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Smartphone, Wallet } from "lucide-react";
 import { products } from "@/brands/mode/products";
 import { useCampaign } from "@/providers/CampaignProvider";
 import { formatFCFA } from "@/core/lib/format";
+import { deliveryOptions } from "@/core/lib/delivery";
 import { getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
 import { useCartStore } from "@/core/store/cart";
 import { useOrdersStore } from "@/core/store/orders";
@@ -19,13 +20,6 @@ import { Input } from "@/components/ui/Input";
 function createOrderId() {
   return `KORA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 }
-
-const deliveryOptions = [
-  { city: "Cotonou", fee: 1000, label: "Cotonou" },
-  { city: "Abomey-Calavi", fee: 1000, label: "Abomey-Calavi" },
-  { city: "Porto-Novo", fee: 3000, label: "Porto-Novo" },
-  { city: "Parakou", fee: 3000, label: "Parakou" },
-] as const;
 
 const paymentOptions = [
   { id: "mtn", label: "MTN Mobile Money", type: "mobile" },
@@ -153,7 +147,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
               <label className="grid gap-2 text-base font-medium text-ink" htmlFor="checkout-address">Quartier, rue et repère
                 <textarea autoComplete="street-address" className="min-h-28 w-full resize-y rounded-[var(--radius-button)] border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" id="checkout-address" onChange={(event) => setAddress(event.target.value)} placeholder="Quartier, rue, repère proche…" required value={address} />
               </label>
-              <p className="text-xs leading-5 text-muted">Frais indicatifs de démonstration : 1 000 FCFA à Cotonou / Abomey-Calavi, 3 000 FCFA à Porto-Novo / Parakou.</p>
+              <p className="text-xs leading-5 text-muted">Délai indicatif de démonstration pour {delivery.label} : {delivery.delay}. Les modalités réelles restent à confirmer.</p>
             </Card>
 
             <Card className="grid gap-3">
@@ -177,7 +171,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
               <div className="grid gap-3 border-t border-line pt-3 text-sm">
                 <div className="flex justify-between gap-3"><span className="text-muted">Sous-total</span><span>{formatFCFA(subtotal)}</span></div>
                 {discount ? <div className="flex justify-between gap-3 text-success"><span>Remise {campaign.promoCode.code}</span><span>−{formatFCFA(discount)}</span></div> : null}
-                <div className="flex justify-between gap-3"><span className="text-muted">Livraison · {delivery.city}</span><span>{formatFCFA(delivery.fee)}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-muted">Livraison · {delivery.city}<span className="block text-xs">{delivery.delay} (indicatif)</span></span><span>{formatFCFA(delivery.fee)}</span></div>
                 <div className="flex justify-between gap-3 border-t border-line pt-3 text-base"><span className="font-bold">Total à régler</span><span className="font-bold">{formatFCFA(total)}</span></div>
               </div>
               {formError ? <p className="text-sm text-error" role="alert">{formError}</p> : null}

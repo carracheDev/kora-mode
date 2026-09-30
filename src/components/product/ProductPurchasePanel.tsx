@@ -121,9 +121,9 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
           {product.oldPrice ? <del className="text-base text-promo">{formatFCFA(product.oldPrice)}</del> : null}
           {product.oldPrice ? <Badge variant="promo">-{discount}%</Badge> : null}
         </div>
-        <p className="mt-3 text-sm text-ink">Note : {product.rating.toFixed(1)} / 5</p>
+        <p className="mt-3 text-sm text-ink">Note de démonstration : {product.rating.toFixed(1)} / 5</p>
         <p aria-live="polite" className="mt-2 text-sm text-muted">
-          {product.stock <= 0 ? "Rupture de stock" : product.stock < 5 ? `Stock faible — plus que ${product.stock}` : "En stock"}
+          {product.stock <= 0 ? "Indisponible dans ce scénario de démonstration" : `Stock de démonstration : ${product.stock} unité${product.stock === 1 ? "" : "s"}${product.stock < 5 ? " · faible" : ""}`}
         </p>
         <p className="mt-4 leading-7 text-muted">{product.description}</p>
       </div>
@@ -170,7 +170,7 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
       <p aria-live="polite" className="text-sm font-semibold text-ink">Total : {formatFCFA(total)}</p>
       {showStickyCta ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[var(--shadow-popover)] backdrop-blur md:hidden">
-          <div className="mx-auto flex max-w-7xl items-center gap-3 px-1">
+          <div className="mx-auto flex max-w-7xl items-center gap-3 px-1 pr-14">
             <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink">{formatFCFA(total)}</span>
             <Button className="min-h-12 flex-1 !text-sm" disabled={!available} onClick={handleStickyCta}>
               {hasVariants ? "Ajouter au panier" : "Choisir mes variantes"}

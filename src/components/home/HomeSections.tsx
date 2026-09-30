@@ -91,13 +91,13 @@ export function FlashOfferSection() {
 
 export function ProductRail({ kind }: { kind: "new" | "bestseller" }) {
   const selected = products.filter((product) => product.tags.includes(kind));
-  const title = kind === "new" ? "Nouveautés" : "Les plus vendus";
+  const title = kind === "new" ? "Nouveautés" : "Sélection KORA";
   const id = kind === "new" ? "nouveautes" : "best-sellers";
 
   return (
     <section className="py-10 sm:py-14" id={id}>
       <Container>
-        <SectionHeading eyebrow={kind === "new" ? "Tout juste arrivés" : "Les favoris KORA"} title={title} description={kind === "new" ? "Les dernières pièces de la sélection." : "Les pièces choisies par la communauté."} />
+        <SectionHeading eyebrow={kind === "new" ? "Tout juste arrivés" : "Sélection de démonstration"} title={title} description={kind === "new" ? "Les dernières pièces de la sélection." : "Une sélection de produits mise en avant pour cette démonstration."} />
         {kind === "new" ? (
           <ProductCarousel products={selected} />
         ) : (

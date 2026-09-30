@@ -94,8 +94,8 @@ export function ProductCard({ product }: { product: Product }) {
 
           <div className="pointer-events-none relative z-[2] mt-3 flex min-h-5 items-center justify-between gap-2 text-xs">
             <p className="truncate text-muted">{product.category}</p>
-            <span aria-label={`Note ${product.rating} sur 5`} className="flex shrink-0 items-center gap-1 font-semibold text-ink">
-              <span aria-hidden="true" className="text-star">★</span>{product.rating.toFixed(1)}
+            <span aria-label={`Note de démonstration ${product.rating} sur 5`} title="Note fictive de démonstration" className="flex shrink-0 items-center gap-1 font-semibold text-ink">
+              <span aria-hidden="true" className="text-star">★</span>{product.rating.toFixed(1)} <span className="text-[10px] font-normal text-muted">démo</span>
             </span>
           </div>
 
@@ -106,8 +106,8 @@ export function ProductCard({ product }: { product: Product }) {
             {product.oldPrice ? <del className="text-xs text-promo">{formatFCFA(product.oldPrice)}</del> : null}
           </div>
 
-          <p aria-hidden={product.stock >= 5} className="mt-1 min-h-[18px] text-xs text-promo">
-            {product.stock < 5 ? `Plus que ${product.stock} en stock` : ""}
+          <p aria-hidden={product.stock >= 5} className="mt-1 min-h-[18px] text-xs text-muted">
+            {product.stock < 5 ? `Stock démo · ${product.stock} unité${product.stock === 1 ? "" : "s"}` : ""}
           </p>
 
           <Button className="relative z-[2] mt-auto w-full !text-sm" disabled={product.stock <= 0 || quantityInCart >= product.stock} onClick={() => setSheetOpen(true)} size="sm" variant="primary">
