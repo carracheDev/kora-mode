@@ -69,7 +69,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Card className="group relative flex h-full flex-col !p-2 sm:!p-3" variant="interactive">
   		<article className="flex h-full min-w-0 flex-1 flex-col">
           <Link aria-label={`Voir ${product.name}`} className="absolute inset-0 z-[1] rounded-[var(--radius-card)]" href={`/produit/${product.slug}`} />
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[calc(var(--radius-card)-6px)] bg-surface-soft">
+          <div className="relative aspect-square overflow-hidden rounded-[calc(var(--radius-card)-6px)] bg-surface-soft sm:aspect-[4/5]">
             <SmartImage
               alt={product.name}
               className="transition-transform duration-300 group-hover:scale-[1.02]"

@@ -30,7 +30,7 @@ function CountLink({
     >
       {children}
       {count ? (
-        <span className="absolute right-0 top-0 grid min-h-5 min-w-5 place-items-center rounded-[var(--radius-pill)] bg-surface-mint px-1 text-[10px] font-bold text-primary">
+        <span className="absolute right-0 top-0 grid min-h-5 min-w-5 place-items-center rounded-[var(--radius-pill)] bg-primary px-1 text-[10px] font-bold text-primary-ink">
           {count > 99 ? "99+" : count}
         </span>
       ) : null}

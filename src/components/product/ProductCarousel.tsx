@@ -17,6 +17,7 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
   const mobile = useRef(false);
   const pageVisible = useRef(true);
   const paused = useRef(true);
+  const touchReleaseTimer = useRef<number | null>(null);
 
   const updateControls = useCallback(() => {
     const track = trackRef.current;
@@ -67,7 +68,7 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
         const elapsed = Math.min(time - previousTime, 40);
         const loopWidth = group.offsetWidth;
         if (loopWidth > 0 && autoScrollOnMobile) {
-          track.scrollLeft -= elapsed * 0.012;
+          track.scrollLeft -= elapsed * 0.02;
           if (track.scrollLeft <= 0) track.scrollLeft += loopWidth;
         }
       }
@@ -79,6 +80,7 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
 
     return () => {
       window.cancelAnimationFrame(frame);
+      if (touchReleaseTimer.current !== null) window.clearTimeout(touchReleaseTimer.current);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       mobilePreference.removeEventListener("change", updateMobileState);
@@ -86,13 +88,48 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
     };
   }, [autoScrollOnMobile, syncPauseState, updateControls, products.length]);
 
+  function handlePointerEnter(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "touch") hovered.current = true;
+    syncPauseState();
+  }
+
+  function handlePointerLeave(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "touch") hovered.current = false;
+    syncPauseState();
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "touch" || event.pointerType === "pen") touching.current = true;
+    syncPauseState();
+  }
+
+  function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "touch" && event.pointerType !== "pen") {
+      touching.current = false;
+      syncPauseState();
+    }
+  }
+
+  function handlePointerCancel(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "touch" && event.pointerType !== "pen") {
+      touching.current = false;
+      syncPauseState();
+    }
+  }
+
   function handleTouchStart() {
+    if (touchReleaseTimer.current !== null) window.clearTimeout(touchReleaseTimer.current);
     touching.current = true;
     syncPauseState();
   }
 
   function handleTouchEnd() {
-    touching.current = false;
+    if (touchReleaseTimer.current !== null) window.clearTimeout(touchReleaseTimer.current);
+    touchReleaseTimer.current = window.setTimeout(() => {
+      touching.current = false;
+      syncPauseState();
+      touchReleaseTimer.current = null;
+    }, 500);
     syncPauseState();
   }
 
@@ -115,14 +152,11 @@ export function ProductCarousel({ products, autoScrollOnMobile = false }: { prod
         focused.current = true;
         syncPauseState();
       }}
-      onMouseEnter={() => {
-        hovered.current = true;
-        syncPauseState();
-      }}
-      onMouseLeave={() => {
-        hovered.current = false;
-        syncPauseState();
-      }}
+      onPointerCancel={handlePointerCancel}
+      onPointerDown={handlePointerDown}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onPointerUp={handlePointerUp}
       onTouchCancel={handleTouchEnd}
       onTouchEnd={handleTouchEnd}
       onTouchStart={handleTouchStart}
