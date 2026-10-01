@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
-import { fetchProductBySlug } from "@/core/api/client";
+import { fetchCatalogProducts, fetchProductBySlug } from "@/core/api/client";
 import { Container } from "@/components/ui/Container";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
@@ -10,6 +10,11 @@ import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { ComplementaryProducts } from "@/components/product/ComplementaryProducts";
 
 type ProductPageProps = PageProps<"/produit/[slug]">;
+
+export async function generateStaticParams() {
+  const products = await fetchCatalogProducts();
+  return products.map((product) => ({ slug: product.slug }));
+}
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
