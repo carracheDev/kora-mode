@@ -68,8 +68,8 @@ export function ProductCard({ product }: { product: Product }) {
     <>
       <Card className="group relative flex h-full flex-col !p-2 sm:!p-3" variant="interactive">
   		<article className="flex h-full min-w-0 flex-1 flex-col">
-          <Link aria-label={`Voir ${product.name}`} className="absolute inset-0 z-[1] rounded-[var(--radius-card)]" href={`/produit/${product.slug}`} />
           <div className="relative aspect-square overflow-hidden rounded-[calc(var(--radius-card)-6px)] bg-surface-soft sm:aspect-[4/5]">
+            <Link aria-label={`Voir ${product.name}`} className="absolute inset-0 z-[1]" href={`/produit/${product.slug}`} />
             <SmartImage
               alt={product.name}
               className="transition-transform duration-300 group-hover:scale-[1.02]"
@@ -78,13 +78,13 @@ export function ProductCard({ product }: { product: Product }) {
               sizes="(max-width: 639px) 44vw, (max-width: 1023px) 30vw, 22vw"
               src={product.images[0] ?? images.products.placeholder}
             />
-            <div className="absolute left-2 top-2 flex max-w-[75%] flex-wrap gap-1.5 sm:left-3 sm:top-3">
+            <div className="pointer-events-none absolute left-2 top-2 z-[2] flex max-w-[75%] flex-wrap gap-1.5 sm:left-3 sm:top-3">
               {discount > 0 ? <Badge variant="promo">-{discount}%</Badge> : isNew ? <Badge variant="new">Nouveau</Badge> : null}
             </div>
             <button
               aria-label={favorite ? `Retirer ${product.name} des favoris` : `Ajouter ${product.name} aux favoris`}
               aria-pressed={favorite}
-              className="absolute right-2 top-2 z-[2] grid size-10 place-items-center rounded-full bg-surface text-ink shadow-[var(--shadow-soft)] hover:text-primary sm:right-3 sm:top-3"
+              className="absolute right-2 top-2 z-[3] grid size-10 place-items-center rounded-full bg-surface text-ink shadow-[var(--shadow-soft)] hover:text-primary sm:right-3 sm:top-3"
               onClick={toggle}
               type="button"
             >
@@ -99,7 +99,9 @@ export function ProductCard({ product }: { product: Product }) {
             </span>
           </div>
 
-          <h3 className="pointer-events-none relative z-[2] mt-1 line-clamp-2 min-h-12 text-base font-semibold leading-6 tracking-normal sm:min-h-[3.1rem] sm:leading-[1.55]">{product.name}</h3>
+          <h3 className="mt-1 line-clamp-2 min-h-12 text-base font-semibold leading-6 tracking-normal sm:min-h-[3.1rem] sm:leading-[1.55]">
+            <Link aria-label={`Voir ${product.name}`} className="hover:text-primary" href={`/produit/${product.slug}`}>{product.name}</Link>
+          </h3>
 
           <div className="relative z-[2] mt-1 flex min-h-7 flex-wrap items-baseline gap-x-2 gap-y-1 pt-1 sm:mt-2 sm:min-h-8 sm:pt-2">
             <span className="text-sm font-bold text-ink">{formatFCFA(product.price)}</span>
