@@ -11,6 +11,8 @@ type ApiOrderItem = {
   discount_amount: number;
 };
 
+export type PaymentDriver = "simulation" | "fedapay" | "cod";
+
 export type ApiOrder = {
   order_number: string;
   customer: { name: string; email: string | null; phone: string; city: string; address: string };
@@ -23,6 +25,7 @@ export type ApiOrder = {
   status: OrderStatus;
   payment_method: NonNullable<Order["paymentMethod"]>;
   payment_status: "pending" | "unpaid" | "paid" | "failed";
+  payment_driver?: PaymentDriver;
   payment_url: string | null;
   created_at: string;
 };

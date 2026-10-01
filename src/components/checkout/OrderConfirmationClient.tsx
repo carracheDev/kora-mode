@@ -9,7 +9,7 @@ import { formatFCFA } from "@/core/lib/format";
 import { getCartItemBaseTotal, getCartItemDiscount, getCartItemTotal } from "@/core/lib/pricing";
 import { buildWhatsAppUrl } from "@/core/lib/whatsapp";
 import { useOrdersStore } from "@/core/store/orders";
-import { fetchApiOrder, simulateApiPayment, toLocalOrder } from "@/core/api/orders";
+import { fetchApiOrder, simulateApiPayment, startApiPayment, toLocalOrder, type PaymentDriver } from "@/core/api/orders";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
@@ -40,19 +40,50 @@ export function OrderConfirmationClient({ orderId }: { orderId: string }) {
   );
   const localOrder = useOrdersStore((state) => state.orders.find((item) => item.id === orderId));
   const [serverOrder, setServerOrder] = useState<Order | null>(null);
+  const [paymentDriver, setPaymentDriver] = useState<PaymentDriver | null>(null);
   const [apiLoading, setApiLoading] = useState(true);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [openingPayment, setOpeningPayment] = useState(false);
+  const [refreshSignal, setRefreshSignal] = useState(0);
+  const [statusError, setStatusError] = useState("");
   const [paymentError, setPaymentError] = useState("");
   const [updatingPayment, setUpdatingPayment] = useState(false);
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), []);
 
   useEffect(() => {
     let active = true;
-    fetchApiOrder(orderId)
-      .then((apiOrder) => { if (active) setServerOrder(toLocalOrder(apiOrder)); })
-      .catch(() => {})
-      .finally(() => { if (active) setApiLoading(false); });
-    return () => { active = false; };
-  }, [orderId]);
+    let timer: number | undefined;
+    let attempts = 0;
+
+    async function refreshOrder() {
+      if (!active) return;
+      setCheckingPayment(true);
+      try {
+        const apiOrder = await fetchApiOrder(orderId);
+        if (!active) return;
+        setServerOrder(toLocalOrder(apiOrder));
+        setPaymentDriver(apiOrder.payment_driver ?? null);
+        setStatusError("");
+        if (apiOrder.payment_driver === "fedapay" && apiOrder.payment_status === "pending" && attempts < 24) {
+          attempts += 1;
+          timer = window.setTimeout(() => void refreshOrder(), 5000);
+        }
+      } catch {
+        if (active) setStatusError("Le statut du paiement n’a pas pu être actualisé. Réessayez dans quelques instants.");
+      } finally {
+        if (active) {
+          setApiLoading(false);
+          setCheckingPayment(false);
+        }
+      }
+    }
+
+    void refreshOrder();
+    return () => {
+      active = false;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [orderId, refreshSignal]);
 
   const order = serverOrder ?? localOrder;
 
@@ -61,6 +92,7 @@ export function OrderConfirmationClient({ orderId }: { orderId: string }) {
 
   const paymentStatus = order.paymentStatus ?? "pending";
   const isMobileMoney = order.paymentMethod !== "cod";
+  const isFedaPay = paymentDriver === "fedapay";
   const whatsappMessage = [
     `Bonjour, voici ma commande KORA MODE ${order.id} :`,
     "",
@@ -88,21 +120,73 @@ export function OrderConfirmationClient({ orderId }: { orderId: string }) {
     }
   }
 
+  async function openFedaPayCheckout() {
+    setOpeningPayment(true);
+    setPaymentError("");
+    try {
+      const payment = await startApiPayment(order!.id);
+      if (payment.payment_url) {
+        window.location.assign(payment.payment_url);
+        return;
+      }
+      setPaymentError("FedaPay n’a pas renvoyé de lien de paiement. Réessaie dans quelques instants.");
+    } catch {
+      setPaymentError("Impossible d’ouvrir le paiement FedaPay. Vérifie la configuration sandbox ou réessaie.");
+    } finally {
+      setOpeningPayment(false);
+    }
+  }
+
   const paymentLabel = !isMobileMoney ? "À régler à la livraison" : paymentStatusLabels[paymentStatus];
+  const confirmationTitle = paymentStatus === "succeeded"
+    ? "Paiement confirmé"
+    : paymentStatus === "failed"
+      ? "Paiement non abouti"
+      : !isMobileMoney
+        ? "Commande confirmée"
+        : isFedaPay
+          ? "Paiement en cours de vérification"
+          : "Commande enregistrée";
+  const confirmationDescription = paymentStatus === "succeeded"
+    ? "Le règlement a été confirmé. Votre commande est prise en compte."
+    : paymentStatus === "failed"
+      ? "Le paiement n’a pas été confirmé. Le statut affiché vient du serveur."
+      : !isMobileMoney
+        ? "Votre commande est enregistrée. Le paiement sera effectué à la livraison."
+        : isFedaPay
+          ? "FedaPay nous transmet la confirmation de façon sécurisée. Cette page actualise le statut automatiquement."
+          : "Paiement de démonstration : choisissez un résultat pour vérifier le parcours.";
 
   return (
     <main className="py-8 sm:py-12">
       <Container className="max-w-3xl">
         <Card className="grid gap-6 !p-5 sm:!p-8">
           <div className="grid justify-items-center gap-3 text-center">
-            {paymentStatus === "succeeded" ? <CheckCircle2 aria-hidden="true" className="text-success" size={42} /> : paymentStatus === "failed" ? <XCircle aria-hidden="true" className="text-error" size={42} /> : <Clock3 aria-hidden="true" className="text-warning" size={42} />}
-            <p className="eyebrow">Récapitulatif de commande</p>
-            <h1 className="font-heading text-3xl font-extrabold">Commande enregistrée</h1>
+            {!isMobileMoney ? <PackageCheck aria-hidden="true" className="text-success" size={42} /> : paymentStatus === "succeeded" ? <CheckCircle2 aria-hidden="true" className="text-success" size={42} /> : paymentStatus === "failed" ? <XCircle aria-hidden="true" className="text-error" size={42} /> : <Clock3 aria-hidden="true" className="text-warning" size={42} />}
+            <p className="eyebrow">Confirmation de commande</p>
+            <h1 className="font-heading text-3xl font-extrabold">{confirmationTitle}</h1>
             <p aria-live="polite" className={`font-semibold ${paymentStatus === "succeeded" ? "text-success" : paymentStatus === "failed" ? "text-error" : "text-warning"}`}>{paymentLabel}</p>
-            <p className="max-w-xl text-sm leading-6 text-muted">Le statut vient du serveur. En mode de démonstration ou sandbox, aucun débit réel n’est déclenché.</p>
+            <p className="max-w-xl text-sm leading-6 text-muted">{confirmationDescription}</p>
           </div>
 
-          {isMobileMoney && paymentStatus === "pending" ? (
+          {isMobileMoney && paymentStatus === "pending" && isFedaPay ? (
+            <section aria-label="Suivi du paiement FedaPay" className="grid gap-3 rounded-[var(--radius-card)] border border-line p-4">
+              <div>
+                <h2 className="font-heading text-lg font-bold">Suivi du paiement</h2>
+                <p className="mt-1 text-sm leading-6 text-muted">Nous vérifions la confirmation FedaPay automatiquement. Tu peux aussi relancer la vérification.</p>
+              </div>
+              <Button className="w-full sm:w-fit" disabled={checkingPayment} onClick={() => setRefreshSignal((value) => value + 1)} variant="secondary">
+                {checkingPayment ? "Vérification…" : "Actualiser le statut"}
+              </Button>
+              <Button className="w-full sm:w-fit" disabled={openingPayment} onClick={openFedaPayCheckout}>
+                {openingPayment ? "Ouverture de FedaPay…" : "Ouvrir le paiement sécurisé"}
+              </Button>
+              {statusError ? <p className="text-sm text-error" role="alert">{statusError}</p> : null}
+              {paymentError ? <p className="text-sm text-error" role="alert">{paymentError}</p> : null}
+            </section>
+          ) : null}
+
+          {isMobileMoney && paymentStatus === "pending" && paymentDriver === "simulation" ? (
             <section aria-label="Résultat du paiement Mobile Money" className="grid gap-3 rounded-[var(--radius-card)] border border-line p-4">
               <h2 className="font-heading text-lg font-bold">Paiement · {paymentLabels[order.paymentMethod ?? "mtn"]}</h2>
               <p className="text-sm leading-6 text-muted">Choisis un résultat de démonstration pour vérifier le parcours. Les choix modifient le statut côté serveur.</p>

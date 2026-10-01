@@ -198,7 +198,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
 
             <Card className="grid gap-3">
               <h2 className="font-heading text-xl font-bold">Mode de paiement</h2>
-              <p className="text-sm text-muted">Simulation uniquement : aucun paiement réel ne sera déclenché.</p>
+              <p className="text-sm text-muted">Après validation, le parcours dépend du mode configuré par la boutique : simulation ou page sécurisée FedaPay sandbox. Ne saisis jamais ton code Mobile Money dans ce formulaire.</p>
               {paymentOptions.map((option) => {
                 const Icon = option.type === "mobile" ? Smartphone : Wallet;
                 return <label className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-[var(--radius-button)] border px-4 py-3 ${paymentMethod === option.id ? "border-primary bg-surface-mint" : "border-line bg-surface"}`} key={option.id}>
