@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
-import { getProductBySlug } from "@/brands/mode/products";
+import { fetchProductBySlug } from "@/core/api/client";
 import { Container } from "@/components/ui/Container";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
@@ -13,7 +13,7 @@ type ProductPageProps = PageProps<"/produit/[slug]">;
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await fetchProductBySlug(slug);
   if (!product) return { title: "Produit introuvable | KORA MODE", robots: { index: false, follow: false } };
   return {
     title: `${product.name} | KORA MODE`,
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await fetchProductBySlug(slug);
   if (!product) notFound();
 
   return (

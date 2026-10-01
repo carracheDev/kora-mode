@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Copy, Search, SlidersHorizontal, X } from "lucide-react";
-import { products } from "@/brands/mode/products";
+import type { Product } from "@/core/types";
 import { buildQuery, filterProducts, readCatalogFilters, sortProducts, type CatalogFilters, type CatalogQueryPatch } from "@/core/lib/catalog";
 import { useCampaign } from "@/providers/CampaignProvider";
 import { isOfferActive } from "@/core/lib/promo";
@@ -85,7 +85,9 @@ function CatalogFilterControls({
   onChange,
   onPriceRange,
   idPrefix,
+  products,
 }: {
+  products: Product[];
   value: CatalogFilters;
   onChange: <K extends keyof CatalogFilters>(key: K, nextValue: CatalogFilters[K]) => void;
   onPriceRange: (minimum: string, maximum: string) => void;
@@ -192,7 +194,7 @@ function SortDropdown({ value, onChange, className = "" }: { value: string; onCh
   );
 }
 
-export function CatalogClient() {
+export function CatalogClient({ products }: { products: Product[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -317,7 +319,7 @@ export function CatalogClient() {
           <SortDropdown className="col-start-2 row-start-2 w-full lg:ml-auto lg:w-auto" onChange={(tri) => updateFilter("tri", tri)} value={filters.tri} />
         </div>
         <div className="mt-6 flex items-start gap-6">
-          <aside className="hidden w-[250px] shrink-0 lg:block"><Card className="sticky top-28 !p-4"><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-bold">Filtres</h2><button className="text-sm font-semibold text-primary" onClick={resetFilters} type="button">Réinitialiser</button></div><CatalogFilterControls idPrefix="desktop-catalog" onChange={updateFilter} onPriceRange={updatePriceRange} value={filters} /></Card></aside>
+          <aside className="hidden w-[250px] shrink-0 lg:block"><Card className="sticky top-28 !p-4"><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-bold">Filtres</h2><button className="text-sm font-semibold text-primary" onClick={resetFilters} type="button">Réinitialiser</button></div><CatalogFilterControls products={products} idPrefix="desktop-catalog" onChange={updateFilter} onPriceRange={updatePriceRange} value={filters} /></Card></aside>
           <div className="min-w-0 flex-1">
             {activeChips.length ? <div aria-label="Filtres actifs" className="mb-4 flex flex-wrap gap-2">{activeChips.map((chip) => <button className="inline-flex min-h-9 items-center gap-2 rounded-[var(--radius-pill)] bg-surface-soft px-3 text-sm" key={chip.key} onClick={() => updateQuery({ [chip.key]: chip.value, ...(chip.key === "prix_min" ? { prix_max: "" } : {}) })} type="button">{chip.label}<span aria-hidden="true">×</span></button>)}<button className="min-h-9 px-2 text-sm font-semibold text-primary" onClick={resetFilters} type="button">Tout effacer</button></div> : null}
             {isPending ? <CatalogSkeleton /> : filteredProducts.length ? <><div className={`grid ${filteredProducts.length === 1 ? "grid-cols-1" : "grid-cols-2"} gap-4 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4`}>{filteredProducts.slice(0, visibleCount).map((product) => <ProductCard key={product.id} product={product} />)}</div><div aria-label={`${Math.min(visibleCount, filteredProducts.length)} articles affichés sur ${filteredProducts.length}`} className="mx-auto mt-4 max-w-md sm:mt-6"><div aria-hidden="true" className="h-1 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${(Math.min(visibleCount, filteredProducts.length) / filteredProducts.length) * 100}%` }} /></div><p className="mt-2 text-center text-sm text-muted">{Math.min(visibleCount, filteredProducts.length)} sur {filteredProducts.length} articles</p></div>{visibleCount < filteredProducts.length ? <div className="mt-4 flex justify-center"><Button onClick={() => setVisibleCount((count) => count + pageSize)} variant="secondary">Charger plus</Button></div> : null}</> : <div className="py-8"><Card className="mx-auto max-w-xl text-center"><h2 className="font-heading font-bold">Aucun article ne correspond à votre recherche</h2><p className="mt-2 text-sm text-muted">Essayez d’élargir vos filtres ou explorez ces pièces.</p><Button className="mt-4" onClick={resetFilters}>Réinitialiser les filtres</Button></Card><h3 className="mt-8 font-heading font-bold">Vous pourriez aimer</h3><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{products.slice(0, 4).map((product) => <ProductCard key={product.id} product={product} />)}</div></div>}
@@ -325,7 +327,7 @@ export function CatalogClient() {
         </div>
       </Container>
       <AnimatePresence>
-        {filterSheetOpen ? <><motion.div animate={{ opacity: 1 }} aria-hidden="true" className="fixed inset-0 z-[90] bg-ink/50 backdrop-blur-sm" exit={{ opacity: 0 }} initial={{ opacity: 0 }} onClick={() => setFilterSheetOpen(false)} /><motion.section animate={{ y: 0 }} aria-labelledby="mobile-filters-title" aria-modal="true" className="fixed inset-x-0 bottom-0 z-[91] flex max-h-[90dvh] flex-col rounded-t-[var(--radius-card)] bg-surface shadow-[var(--shadow-popover)]" exit={{ y: "100%" }} initial={{ y: "100%" }} ref={sheetRef} role="dialog"><header className="flex items-center justify-between border-b border-line px-5 py-4"><h2 className="font-heading font-bold" id="mobile-filters-title">Filtres</h2><button aria-label="Fermer les filtres" className="grid size-10 place-items-center rounded-full bg-surface-soft" onClick={() => setFilterSheetOpen(false)} type="button"><X aria-hidden="true" size={18} /></button></header><div className="catalog-filter-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5"><CatalogFilterControls idPrefix="mobile-catalog" onChange={updateDraft} onPriceRange={(minimum, maximum) => setDraftFilters((current) => ({ ...current, prix_min: minimum, prix_max: maximum }))} value={draftFilters} /></div><footer className="relative grid grid-cols-[1fr_2fr] gap-3 border-t border-line bg-surface px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-gradient-to-t before:from-surface before:to-transparent"><Button className="!min-h-12 !pl-4" fullWidth onClick={() => { resetFilters(); setFilterSheetOpen(false); }} variant="ghost">Réinitialiser</Button><Button className="!min-h-12 !whitespace-nowrap !text-sm !font-semibold !text-white" fullWidth onClick={() => { updateQuery(draftFilters as unknown as CatalogQueryPatch); setFilterSheetOpen(false); }}>Voir {previewCount} articles</Button></footer></motion.section></> : null}
+        {filterSheetOpen ? <><motion.div animate={{ opacity: 1 }} aria-hidden="true" className="fixed inset-0 z-[90] bg-ink/50 backdrop-blur-sm" exit={{ opacity: 0 }} initial={{ opacity: 0 }} onClick={() => setFilterSheetOpen(false)} /><motion.section animate={{ y: 0 }} aria-labelledby="mobile-filters-title" aria-modal="true" className="fixed inset-x-0 bottom-0 z-[91] flex max-h-[90dvh] flex-col rounded-t-[var(--radius-card)] bg-surface shadow-[var(--shadow-popover)]" exit={{ y: "100%" }} initial={{ y: "100%" }} ref={sheetRef} role="dialog"><header className="flex items-center justify-between border-b border-line px-5 py-4"><h2 className="font-heading font-bold" id="mobile-filters-title">Filtres</h2><button aria-label="Fermer les filtres" className="grid size-10 place-items-center rounded-full bg-surface-soft" onClick={() => setFilterSheetOpen(false)} type="button"><X aria-hidden="true" size={18} /></button></header><div className="catalog-filter-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5"><CatalogFilterControls products={products} idPrefix="mobile-catalog" onChange={updateDraft} onPriceRange={(minimum, maximum) => setDraftFilters((current) => ({ ...current, prix_min: minimum, prix_max: maximum }))} value={draftFilters} /></div><footer className="relative grid grid-cols-[1fr_2fr] gap-3 border-t border-line bg-surface px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-gradient-to-t before:from-surface before:to-transparent"><Button className="!min-h-12 !pl-4" fullWidth onClick={() => { resetFilters(); setFilterSheetOpen(false); }} variant="ghost">Réinitialiser</Button><Button className="!min-h-12 !whitespace-nowrap !text-sm !font-semibold !text-white" fullWidth onClick={() => { updateQuery(draftFilters as unknown as CatalogQueryPatch); setFilterSheetOpen(false); }}>Voir {previewCount} articles</Button></footer></motion.section></> : null}
       </AnimatePresence>
     </main>
   );

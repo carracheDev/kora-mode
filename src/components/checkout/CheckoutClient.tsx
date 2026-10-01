@@ -12,15 +12,13 @@ import { deliveryOptions } from "@/core/lib/delivery";
 import { getCartItemBaseTotal, getCartItemDiscount, getCartItemTotal, getCartSubtotal, getEligibleSubtotal, getPromoDiscount } from "@/core/lib/pricing";
 import { useCartStore } from "@/core/store/cart";
 import { useOrdersStore } from "@/core/store/orders";
+import { createApiOrder, startApiPayment, toLocalOrder } from "@/core/api/orders";
+import { KoraApiError } from "@/core/api/client";
 import type { Order } from "@/core/types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Input } from "@/components/ui/Input";
-
-function createOrderId() {
-  return `KORA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-}
 
 const paymentOptions = [
   { id: "mtn", label: "MTN Mobile Money", type: "mobile" },
@@ -46,6 +44,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
   const { campaign } = useCampaign();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [city, setCity] = useState<string>(deliveryOptions[0].city);
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<(typeof paymentOptions)[number]["id"]>("cod");
@@ -87,7 +86,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
     }
   }
 
-  function submitOrder(event: FormEvent<HTMLFormElement>) {
+  async function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!validItems.length) return;
     if (promoApplied && !isOfferActive(campaign.flashOffer.endsAt)) {
@@ -104,27 +103,54 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
       return;
     }
     setFormError("");
-    const id = createOrderId();
-    const order: Order = {
-      id,
-      items: validItems,
-      subtotal,
-      deliveryFee: delivery.fee,
-      total,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      customerName: name.trim(),
-      customerPhone: phone.trim(),
-      customerCity: city,
-      customerAddress: address.trim(),
-      paymentMethod,
-      paymentStatus: "pending",
-      promoCode: discount ? campaign.promoCode.code : undefined,
-      promoDiscount: discount || undefined,
-    };
-    addOrder(order);
-    clearCart();
-    router.push(`/commande/${id}`);
+
+    try {
+      const payload = {
+        customer: {
+          name: name.trim(),
+          email: email.trim() || undefined,
+          phone: phone.trim(),
+          city,
+          address: address.trim(),
+        },
+        payment_method: paymentMethod,
+        promo_code: discount ? campaign.promoCode.code : undefined,
+        items: validItems.flatMap((item) => {
+          const product = productById.get(item.productId);
+          return product ? [{
+            product_slug: product.slug,
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color,
+            ...(item.bundleId ? { bundle_id: item.bundleId } : {}),
+          }] : [];
+        }),
+      } as const;
+      const apiOrder = await createApiOrder(payload);
+      const localOrder = toLocalOrder(apiOrder);
+      addOrder(localOrder);
+      clearCart();
+
+      if (paymentMethod !== "cod") {
+        try {
+          const payment = await startApiPayment(apiOrder.order_number);
+          if (payment.payment_url) {
+            window.location.assign(payment.payment_url);
+            return;
+          }
+        } catch {
+          // La commande reste consultable et le paiement pourra être relancé depuis son reçu.
+        }
+      }
+
+      router.push(`/commande/${apiOrder.order_number}`);
+    } catch (error) {
+      if (error instanceof KoraApiError && error.status === 422) {
+        setFormError("Certaines informations, variantes ou disponibilités ont changé. Vérifiez votre panier et vos coordonnées.");
+      } else {
+        setFormError(error instanceof Error ? error.message : "La commande n’a pas pu être enregistrée. Réessayez.");
+      }
+    }
   }
 
   if (!hydrated) {
@@ -139,7 +165,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
     <main className="py-8 sm:py-12">
       <Container>
         <Link className="mb-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary" href="/panier"><ArrowLeft aria-hidden="true" size={17} />Retour au panier</Link>
-        <div className="mb-7"><p className="eyebrow">Commande sans compte</p><h1 className="mt-2 font-heading font-extrabold">Livraison et paiement</h1><p className="mt-2 max-w-2xl text-sm text-muted">Renseignez les informations nécessaires. Les tarifs et paiements affichés sont simulés pour cette démo.</p></div>
+        <div className="mb-7"><p className="eyebrow">Commande sans compte</p><h1 className="mt-2 font-heading font-extrabold">Livraison et paiement</h1><p className="mt-2 max-w-2xl text-sm text-muted">Renseignez les informations nécessaires. Les montants sont recalculés par la boutique au moment de la validation.</p></div>
 
         <form className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8" onSubmit={submitOrder}>
           <div className="grid gap-5">
@@ -147,6 +173,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
               <h2 className="font-heading text-xl font-bold">Vos coordonnées</h2>
               <Input autoComplete="name" label="Nom complet" name="name" onChange={(event) => setName(event.target.value)} placeholder="Ex. Aïcha Soglo" required value={name} />
               <Input autoComplete="tel" label="Téléphone" name="phone" onChange={(event) => setPhone(event.target.value)} placeholder="Ex. +229 01 90 00 00 00" required type="tel" value={phone} />
+              {paymentMethod !== "cod" ? <Input autoComplete="email" label="E-mail pour le reçu de paiement" name="email" onChange={(event) => setEmail(event.target.value)} placeholder="Ex. awa@example.com" required type="email" value={email} /> : null}
             </Card>
 
             <Card className="grid gap-4">
@@ -186,8 +213,8 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
               </div>
               {formError ? <p className="text-sm text-error" role="alert">{formError}</p> : null}
               {stockIssues.length > 0 ? <p className="text-sm text-error">Le stock a changé pour un ou plusieurs articles. Ajustez votre panier avant de commander.</p> : null}
-              <Button className="w-full !text-sm" disabled={stockIssues.length > 0} type="submit">Enregistrer ma commande de démo</Button>
-              <p className="text-xs leading-5 text-muted">Commande locale de démonstration. Les tarifs de livraison et le paiement sont simulés.</p>
+              <Button className="w-full !text-sm" disabled={stockIssues.length > 0} type="submit">Confirmer ma commande</Button>
+              <p className="text-xs leading-5 text-muted">Le total et le stock sont vérifiés par le serveur. Le paiement Mobile Money reste en mode démonstration ou sandbox.</p>
             </Card>
           </aside>
         </form>
