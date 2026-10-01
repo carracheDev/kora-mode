@@ -24,7 +24,11 @@ type ApiProduct = {
 };
 type ApiEnvelope<T> = { data: T };
 
-type ApiRequestOptions = Omit<RequestInit, "body"> & { body?: unknown; token?: string | null };
+type ApiRequestOptions = Omit<RequestInit, "body"> & {
+  body?: unknown;
+  token?: string | null;
+  next?: { revalidate?: number; tags?: string[] };
+};
 
 export class KoraApiError extends Error {
   constructor(message: string, public readonly status: number, public readonly payload: unknown) {
@@ -62,7 +66,7 @@ export async function koraApi<T>(path: string, options: ApiRequestOptions = {}):
     ...options,
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
-    cache: "no-store",
+    cache: options.cache ?? "no-store",
   });
   const payload: unknown = await response.json().catch(() => null);
 
@@ -102,7 +106,11 @@ function mapApiProduct(apiProduct: ApiProduct): Product {
 
 export async function fetchCatalogProducts(): Promise<Product[]> {
   try {
-    const response = await koraApi<{ data: ApiProduct[] }>("/products?per_page=48", { token: null });
+    const response = await koraApi<{ data: ApiProduct[] }>("/products?per_page=48", {
+      token: null,
+      cache: "force-cache",
+      next: { revalidate: 60 },
+    });
     return response.data.map(mapApiProduct);
   } catch {
     return demoProducts;
@@ -110,10 +118,6 @@ export async function fetchCatalogProducts(): Promise<Product[]> {
 }
 
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
-  try {
-    const response = await koraApi<ApiEnvelope<ApiProduct>>(`/products/${encodeURIComponent(slug)}`, { token: null });
-    return mapApiProduct(response.data);
-  } catch {
-    return demoProducts.find((product) => product.slug === slug) ?? null;
-  }
+  const products = await fetchCatalogProducts();
+  return products.find((product) => product.slug === slug) ?? null;
 }
