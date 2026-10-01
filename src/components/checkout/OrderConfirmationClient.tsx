@@ -169,6 +169,15 @@ export function OrderConfirmationClient({ orderId }: { orderId: string }) {
             <p className="max-w-xl text-sm leading-6 text-muted">{confirmationDescription}</p>
           </div>
 
+          {statusError && !serverOrder ? (
+            <section aria-label="Vérification de la commande" className="grid gap-3 rounded-[var(--radius-card)] border border-warning/30 bg-warning/5 p-4">
+              <p className="text-sm leading-6 text-ink">Le serveur ne confirme pas encore cette commande. Les informations affichées proviennent de cet appareil et ne prouvent pas qu’un paiement a été reçu.</p>
+              <Button className="w-full sm:w-fit" disabled={checkingPayment} onClick={() => setRefreshSignal((value) => value + 1)} variant="secondary">
+                {checkingPayment ? "Vérification…" : "Réessayer la vérification"}
+              </Button>
+            </section>
+          ) : null}
+
           {isMobileMoney && paymentStatus === "pending" && isFedaPay ? (
             <section aria-label="Suivi du paiement FedaPay" className="grid gap-3 rounded-[var(--radius-card)] border border-line p-4">
               <div>

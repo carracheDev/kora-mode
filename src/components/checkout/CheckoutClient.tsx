@@ -52,6 +52,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
   const [promoApplied, setPromoApplied] = useState(Boolean(initialCode));
   const [promoMessage, setPromoMessage] = useState("");
   const [formError, setFormError] = useState("");
+  const [submittingOrder, setSubmittingOrder] = useState(false);
 
   const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), []);
   const validItems = items.filter((item) => productById.has(item.productId));
@@ -112,6 +113,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
       return;
     }
     setFormError("");
+    setSubmittingOrder(true);
 
     try {
       const payload = {
@@ -159,11 +161,16 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
       } else {
         setFormError(error instanceof Error ? error.message : "La commande n’a pas pu être enregistrée. Réessayez.");
       }
+      setSubmittingOrder(false);
     }
   }
 
   if (!hydrated) {
     return <main className="py-10 sm:py-14"><Container><p aria-live="polite" className="text-muted">Préparation du checkout…</p></Container></main>;
+  }
+
+  if (submittingOrder) {
+    return <main className="py-10 sm:py-14"><Container><Card aria-live="polite" className="mx-auto grid max-w-xl justify-items-center gap-3 py-12 text-center"><p className="eyebrow">Commande sécurisée</p><h1 className="font-heading text-2xl font-bold">Nous préparons votre commande</h1><p className="text-sm text-muted">Nous enregistrons votre panier et préparons la prochaine étape. Ne fermez pas cette page.</p></Card></Container></main>;
   }
 
   if (!validItems.length) {
@@ -222,7 +229,7 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
               </div>
               {formError ? <p className="text-sm text-error" role="alert">{formError}</p> : null}
               {stockIssues.length > 0 ? <p className="text-sm text-error">Le stock a changé pour un ou plusieurs articles. Ajustez votre panier avant de commander.</p> : null}
-              <Button className="w-full !text-sm" disabled={stockIssues.length > 0} type="submit">Confirmer ma commande</Button>
+              <Button className="w-full !text-sm" disabled={stockIssues.length > 0 || submittingOrder} type="submit">{submittingOrder ? "Enregistrement…" : "Confirmer ma commande"}</Button>
               <p className="text-xs leading-5 text-muted">Le total et le stock sont vérifiés par le serveur. Le paiement Mobile Money reste en mode démonstration ou sandbox.</p>
             </Card>
           </aside>
