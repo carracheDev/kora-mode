@@ -98,6 +98,15 @@ export function CheckoutClient({ initialCode }: { initialCode: string }) {
       setFormError("Une quantité demandée dépasse le stock disponible. Ajustez votre panier avant de continuer.");
       return;
     }
+    const itemMissingColor = validItems.find((item) => {
+      const product = productById.get(item.productId);
+      return product?.colors.length && !item.color;
+    });
+    if (itemMissingColor) {
+      const product = productById.get(itemMissingColor.productId)!;
+      setFormError(`Choisissez une couleur pour ${product.name} avant de confirmer la commande.`);
+      return;
+    }
     if (!name.trim() || !phone.trim() || !address.trim()) {
       setFormError("Renseignez votre nom, votre téléphone et votre adresse complète.");
       return;

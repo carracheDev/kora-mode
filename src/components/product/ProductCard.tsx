@@ -152,7 +152,10 @@ export function ProductCard({ product }: { product: Product }) {
                 <ProductVariantSelector color={color} onColorChange={setColor} onSizeChange={setSize} product={product} size={size} />
               </div>
 
-              <Button className="mt-6 w-full" disabled={!size} onClick={addToCart}>
+              <p aria-live="polite" className="mt-4 min-h-5 text-sm text-muted">
+                {!size ? "Sélectionnez une taille." : product.colors.length > 0 && !color ? "Sélectionnez une couleur." : ""}
+              </p>
+              <Button className="mt-2 w-full" disabled={!size || (product.colors.length > 0 && !color)} onClick={addToCart}>
                 Ajouter au panier
               </Button>
             </motion.section>
